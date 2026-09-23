@@ -32,23 +32,6 @@ export async function switchTeam(data: FormData) {
   (await cookies()).set("qadam-team", team.id, cookieOptions);
   redirect(`/team/profile?notice=switched&event=${Date.now()}`);
 }
-export async function createDraft(data: FormData) {
-  const { business } = await requireRole("business");
-  if (!business) redirect("/business?notice=invalid");
-  const title = text(data, "title", 150);
-  const rawDescription = text(data, "rawDescription", 8000);
-  if (!title || !rawDescription) redirect("/business/tasks/new?notice=invalid");
-  const task = await db.task.create({
-    data: {
-      businessId: business.id,
-      title,
-      rawDescription,
-      industry: text(data, "industry", 100),
-    },
-  });
-  revalidatePath("/business");
-  redirect(`/tasks/${task.id}?notice=created`);
-}
 export async function saveProfile(data: FormData) {
   const { team } = await requireRole("team");
   if (!team) redirect("/team/profile?notice=invalid");

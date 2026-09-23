@@ -68,6 +68,8 @@ model Task {
   business        Business       @relation(fields: [businessId], references: [id], onDelete: Restrict)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
+  wizardState     Json           @default("{}")
+  wizardRevision  Int            @default(0)
   confirmedAt     DateTime?
   publishedAt     DateTime?
   proposals       Proposal[]

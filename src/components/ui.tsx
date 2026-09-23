@@ -129,6 +129,14 @@ export function TaskCard({
         ))}
       </div>
       <ScoreBar score={task.score} />
+      {task.status === "DRAFT" && (
+        <Link
+          className="btn btn-secondary mt-4"
+          href={`/business/tasks/new?task=${task.id}`}
+        >
+          Продолжить в конструкторе
+        </Link>
+      )}
       <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-xs text-slate-500">
         <span className="flex items-center gap-1.5">
           <MessageSquare size={14} />

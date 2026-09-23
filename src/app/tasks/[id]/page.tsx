@@ -45,6 +45,16 @@ export default async function TaskDetail({
         <ArrowLeft size={14} />
         Назад к задачам
       </Link>
+      {task.status === "DRAFT" && session.role === "business" && (
+        <div className="mb-6">
+          <Link
+            className="btn btn-primary"
+            href={`/business/tasks/new?task=${task.id}`}
+          >
+            Продолжить в конструкторе
+          </Link>
+        </div>
+      )}
       <div className="mb-7">
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <span className="tag">{task.industry || "Отрасль не указана"}</span>
