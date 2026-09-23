@@ -74,6 +74,7 @@ export default async function TaskDetail({
           </Link>
         </div>
       )}
+      {isOwner && <Link className="btn btn-primary mb-5" href={`/business/tasks/${task.id}/edit`}>Редактировать задачу</Link>}
       <div className="mb-7">
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <span className="tag">{task.industry || "Отрасль не указана"}</span>

@@ -98,9 +98,11 @@ export function EmptyState({
 export function TaskCard({
   task,
   match,
+  editable = false,
 }: {
   task: Task & { business: { name: string }; _count: { proposals: number } };
   match?: TaskMatch;
+  editable?: boolean;
 }) {
   return (
     <article className="task-card">
@@ -138,6 +140,7 @@ export function TaskCard({
         {match && !tags(task.skills).length && <span className="text-xs text-slate-400">Пока не указаны</span>}
       </div>
       <ScoreBar score={task.score} />
+      {editable && <Link className="btn btn-secondary mt-4" href={`/business/tasks/${task.id}/edit`}>Редактировать задачу</Link>}
       {task.status === "DRAFT" && (
         <Link
           className="btn btn-secondary mt-4"

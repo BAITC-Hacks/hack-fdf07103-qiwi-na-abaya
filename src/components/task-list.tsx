@@ -124,7 +124,7 @@ export function TaskList({
       {results.length ? (
         <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
           {results.map((task) => (
-            <TaskCard task={task} key={task.id} />
+            <TaskCard task={task} key={task.id} editable={basePath === "/business/tasks"} />
           ))}
         </div>
       ) : (
