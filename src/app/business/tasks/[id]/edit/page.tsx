@@ -11,5 +11,5 @@ export default async function EditTask({ params }: { params: Promise<{ id: strin
   const task = await db.task.findFirst({ where: { id, businessId: business.id } });
   if (!task) notFound();
   const card = Object.fromEntries(cardFields.map(([key]) => [key, key === "skills" ? tags(task.skills).join(", ") : task[key]])) as TaskCardInput;
-  return <TaskEditor key={task.id} id={task.id} initialCard={card} initialRevision={task.wizardRevision} />;
+  return <TaskEditor key={task.id} id={task.id} initialCard={card} initialRevision={task.wizardRevision} status={task.status} />;
 }

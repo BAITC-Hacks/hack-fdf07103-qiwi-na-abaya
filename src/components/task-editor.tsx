@@ -1,13 +1,16 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { PublishTaskDialog } from "./publish-task-dialog";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Save, Sparkles, Loader2 } from "lucide-react";
 import { cardFields, type CardField, type TaskCardInput } from "@/lib/task-assistant";
 import { calculateReadiness, readinessLabels } from "@/lib/scoring";
 import { PageHeading, ReadinessBadge, ScoreBar } from "./ui";
-import { updateTask } from "@/app/business/tasks/[id]/edit/actions";
+import { updateTask, publishTask } from "@/app/business/tasks/[id]/edit/actions";
 
-export function TaskEditor({ id, initialCard, initialRevision }: { id: string; initialCard: TaskCardInput; initialRevision: number }) {
+export function TaskEditor({ id, initialCard, initialRevision, status }: { id: string; initialCard: TaskCardInput; initialRevision: number; status: string }) {
+  const router = useRouter();
   const [card, setCard] = useState(initialCard);
   const [savedCard, setSavedCard] = useState(initialCard);
   const [revision, setRevision] = useState(initialRevision);
@@ -81,6 +84,14 @@ export function TaskEditor({ id, initialCard, initialRevision }: { id: string; i
           {error && <p role="alert" className="mb-3 text-sm text-rose-700">{error}</p>}
           {message && <p role="status" className="mb-3 text-sm text-emerald-700">{message}</p>}
           <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-slate-500">{dirty ? "Есть несохранённые изменения" : "Все изменения сохранены"}</p><button type="submit" className="btn btn-primary" disabled={pending}>{pending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}{pending ? "Сохраняем…" : "Сохранить изменения"}</button></div>
+          {status === "DRAFT" && <div className="mt-3 border-t border-slate-100 pt-3"><PublishTaskDialog card={card} disabled={pending} onConfirm={async () => {
+            setError("");
+            const result = await publishTask({ id, revision, card }, true);
+            if (!result.ok) { setError(result.error); return false; }
+            setCard(result.card); setSavedCard(result.card); setRevision(result.revision);
+            router.push(`/tasks/${id}?notice=published`);
+            return true;
+          }} /></div>}
         </div>
       </form>
     </div>

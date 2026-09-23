@@ -11,7 +11,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { PrismaClient } from "@prisma/client";
-import { saveTaskEdit } from "../src/lib/task-edit.ts";
+import { saveTaskEdit, publishTaskEdit } from "../src/lib/task-edit.ts";
 import { emptyCard } from "../src/lib/task-assistant.ts";
 import { calculateReadiness } from "../src/lib/scoring.ts";
 test("SQLite: task editing recalculates score, persists fields, preserves workflow and rejects stale/foreign edits", async () => {
@@ -62,6 +62,26 @@ test("SQLite: task editing recalculates score, persists fields, preserves workfl
     const decreased = await saveTaskEdit(db, business.id, { id: task.id, revision: 2, card: { ...emptyCard, title: "Cleared task" }, score: 100 });
     assert.equal(decreased.score, 0);
     assert.equal((await db.task.findUniqueOrThrow({ where: { id: task.id } })).readinessLevel, "DRAFT");
+    const draft = await db.task.create({ data: { businessId: business.id, title: "Publication test" } });
+    assert.equal(draft.status, "DRAFT");
+    const publication = { id: draft.id, revision: 0, card: { ...emptyCard, title: "Low score published task" }, score: 100 };
+    await assert.rejects(() => publishTaskEdit(db, business.id, publication, false), /Подтвердите/);
+    await assert.rejects(() => publishTaskEdit(db, business.id, publication, "true"), /Подтвердите/);
+    await assert.rejects(() => publishTaskEdit(db, "other", publication, true), /недоступна/);
+    await assert.rejects(() => publishTaskEdit(db, business.id, { ...publication, revision: 99 }, true), /другой вкладке/);
+    assert.equal((await db.task.findUniqueOrThrow({ where: { id: draft.id } })).status, "DRAFT");
+    const published = await publishTaskEdit(db, business.id, publication, true);
+    assert.equal(published.score, 0);
+    const visible = await db.task.findFirstOrThrow({ where: { id: draft.id, status: "PUBLISHED" } });
+    assert.equal(visible.title, publication.card.title);
+    assert.equal(visible.score, 0);
+    assert.ok(visible.confirmedAt instanceof Date);
+    assert.ok(visible.publishedAt instanceof Date);
+    await assert.rejects(() => publishTaskEdit(db, business.id, { ...publication, revision: 1 }, true), /только черновик/);
+    for (const status of ["IN_PROGRESS", "COMPLETED"] as const) {
+      await db.task.update({ where: { id: draft.id }, data: { status } });
+      await assert.rejects(() => publishTaskEdit(db, business.id, { ...publication, revision: 1 }, true), /только черновик/);
+    }
   } finally {
     await db.$disconnect();
     // Delete only files in the uniquely created test directory, no recursive removal.

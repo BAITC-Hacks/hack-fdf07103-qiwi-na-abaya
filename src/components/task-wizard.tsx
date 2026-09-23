@@ -1,11 +1,11 @@
 "use client";
+import { PublishTaskDialog } from "./publish-task-dialog";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
-  CheckCircle2,
   Cloud,
   FileCheck2,
   Loader2,
@@ -38,7 +38,6 @@ export function TaskWizard({
   >("saved");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [confirmed, setConfirmed] = useState(false);
   const queue = useRef<Promise<void>>(Promise.resolve());
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const epoch = useRef(0);
@@ -61,7 +60,6 @@ export function TaskWizard({
     latest.current = next;
     setState(next);
     epoch.current += 1;
-    setConfirmed(false);
     setSaveStatus("pending");
     setError("");
     backup(next, true);
@@ -234,8 +232,7 @@ export function TaskWizard({
               disabled={busy || index + 1 >= state.step}
               aria-current={index + 1 === state.step ? "step" : undefined}
               onClick={() => {
-                setConfirmed(false);
-                void run("save", index + 1);
+                            void run("save", index + 1);
               }}
               className={`flex w-full items-center gap-2 rounded-xl border p-3 text-left text-xs font-semibold sm:gap-3 sm:p-4 ${index + 1 === state.step ? "border-violet-300 bg-violet-50 text-violet-700" : index + 1 < state.step ? "border-emerald-100 bg-white text-emerald-700" : "border-slate-200 bg-white text-slate-400"} disabled:!cursor-default disabled:!opacity-100`}
             >
@@ -488,16 +485,7 @@ export function TaskWizard({
                   видна командам в общем каталоге. Низкий рейтинг не запрещает
                   публикацию или отклик.
                 </div>
-                <label className="mt-5 flex cursor-pointer items-start gap-3 text-sm leading-relaxed">
-                  <input
-                    type="checkbox"
-                    className="mt-1 size-4 shrink-0 accent-violet-600"
-                    checked={confirmed}
-                    onChange={(e) => setConfirmed(e.target.checked)}
-                  />
-                  Я проверил(а) карточку и подтверждаю публикацию этих сведений
-                  в каталоге.
-                </label>
+
               </>
             )}
           </fieldset>
@@ -506,8 +494,7 @@ export function TaskWizard({
               className="btn btn-secondary"
               disabled={busy}
               onClick={async () => {
-                setConfirmed(false);
-                if (state.step > 1) await run("save", state.step - 1);
+                            if (state.step > 1) await run("save", state.step - 1);
                 else if (!state.rawDescription.trim() || (await run("save"))) {
                   router.push("/business/tasks");
                   router.refresh();
@@ -541,18 +528,7 @@ export function TaskWizard({
                     ][state.step - 1]}
               </button>
             ) : (
-              <button
-                className="btn btn-primary"
-                disabled={busy || !confirmed}
-                onClick={() => void run("publish", 4, confirmed)}
-              >
-                {busy ? (
-                  <Loader2 size={15} className="animate-spin" />
-                ) : (
-                  <CheckCircle2 size={15} />
-                )}
-                {busy ? "Публикуем…" : "Подтвердить и опубликовать"}
-              </button>
+              <PublishTaskDialog card={state.card} disabled={busy} onConfirm={() => run("publish", 4, true)} />
             )}
           </div>
         </section>
