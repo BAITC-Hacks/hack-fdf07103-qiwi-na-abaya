@@ -56,7 +56,7 @@ export function ProposalForm({
           />
         </label>
         <label className="field">
-          Срок
+          Предполагаемый срок
           <input
             required
             maxLength={120}

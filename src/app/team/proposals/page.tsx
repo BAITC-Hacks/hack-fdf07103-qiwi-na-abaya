@@ -7,7 +7,10 @@ export default async function MyProposals() {
   const proposals = team
     ? await db.proposal.findMany({
         where: { teamId: team.id },
-        include: { task: true, team: true },
+        include: {
+          task: { include: { business: { select: { name: true } } } },
+          team: true,
+        },
         orderBy: { createdAt: "desc" },
       })
     : [];

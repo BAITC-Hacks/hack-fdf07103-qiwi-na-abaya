@@ -2,6 +2,7 @@
 import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { createTeamProposal } from "@/lib/proposal-storage";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { proposalSchema, type ProposalResult } from "@/lib/proposals";
@@ -26,18 +27,7 @@ export async function submitProposal(
     if (!parsed.success)
       return { ok: false, message: parsed.error.issues[0].message };
     const data = parsed.data;
-    await db.$transaction(async (tx) => {
-      const task = await tx.task.findUnique({
-        where: { id: data.taskId },
-        select: { status: true },
-      });
-      if (!task || task.status !== "PUBLISHED")
-        throw new Error("Задача недоступна для новых предложений.");
-      // No score gate: even a published task with 0 points accepts proposals.
-      await tx.proposal.create({
-        data: { ...data, teamId: session.team!.id, status: "PENDING" },
-      });
-    });
+    await createTeamProposal(db, session.team.id, data);
     for (const path of [
       "/tasks",
       `/tasks/${data.taskId}`,

@@ -5,7 +5,10 @@ import { proposalLabels, dateLabel } from "@/lib/presentation";
 import { EmptyState } from "./ui";
 import { Modal } from "./interactive";
 type Proposal = Prisma.ProposalGetPayload<{
-  include: { task: true; team: true };
+  include: {
+    task: { include: { business: { select: { name: true } } } };
+    team: true;
+  };
 }>;
 export function ProposalList({
   proposals,
@@ -39,22 +42,25 @@ export function ProposalList({
                 <MessageSquare size={18} />
               </span>
               <div className="min-w-0">
-                <h2 className="font-bold">
+                <h2 className="break-words font-bold">
                   {business ? proposal.team.name : proposal.task.title}
                 </h2>
                 <p className="mt-1 text-xs text-slate-500">
-                  {business ? proposal.task.title : proposal.team.name} ·{" "}
-                  {dateLabel(proposal.createdAt)}
+                  {business ? proposal.task.title : proposal.task.business.name}{" "}
+                  ·{" "}
+                  <time dateTime={proposal.createdAt.toISOString()}>
+                    {dateLabel(proposal.createdAt)}
+                  </time>
                 </p>
               </div>
             </div>
             <span
               className={`badge ${proposal.status === "ACCEPTED" ? "level-ready" : proposal.status === "REJECTED" ? "bg-rose-50 text-rose-700" : "level-workable"}`}
             >
-              {proposalLabels[proposal.status]}
+              {proposalLabels[proposal.status]} · {proposal.status}
             </span>
           </div>
-          <p className="muted my-4 max-w-3xl text-sm">
+          <p className="muted my-4 max-w-3xl break-words whitespace-pre-wrap text-sm">
             {proposal.solutionIdea}
           </p>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
@@ -76,13 +82,13 @@ export function ProposalList({
                 <div className="space-y-5">
                   <div>
                     <p className="eyebrow">Идея решения</p>
-                    <p className="muted whitespace-pre-wrap text-sm">
+                    <p className="muted whitespace-pre-wrap break-words text-sm">
                       {proposal.solutionIdea}
                     </p>
                   </div>
                   <div>
                     <p className="eyebrow">План работы</p>
-                    <p className="muted whitespace-pre-wrap text-sm">
+                    <p className="muted whitespace-pre-wrap break-words text-sm">
                       {proposal.plan}
                     </p>
                   </div>
