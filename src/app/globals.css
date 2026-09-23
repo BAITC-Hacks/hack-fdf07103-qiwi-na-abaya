@@ -1,9 +1,211 @@
 @import "tailwindcss";
-
-:root { color-scheme: light; }
-body { margin: 0; background: #f5f6fa; color: #172037; font-family: Arial, Helvetica, sans-serif; }
-::selection { background: #d9d2ff; }
-a, button { -webkit-tap-highlight-color: transparent; }
-:focus-visible { outline: 3px solid #7359eb; outline-offset: 5px; }
-html { scroll-behavior: smooth; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+:root {
+  color-scheme: light;
+}
+body {
+  margin: 0;
+  background: #f7f8fc;
+  color: #20243c;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+}
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+select {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+::selection {
+  background: #e0d7ff;
+}
+:focus-visible {
+  outline: 3px solid #9b87f5;
+  outline-offset: 3px;
+}
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: 20px;
+  z-index: 100;
+  padding: 12px;
+  background: white;
+}
+.skip-link:focus {
+  top: 12px;
+}
+@layer components {
+  .sidebar {
+    @apply fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-slate-200/70 bg-white px-5 py-8 lg:flex;
+  }
+  .brand {
+    @apply flex items-center gap-2 text-[29px] font-extrabold tracking-tight;
+  }
+  .brand-icon {
+    @apply mr-1 grid size-10 place-items-center rounded-xl bg-violet-600 text-white shadow-md shadow-violet-200;
+  }
+  .nav-link {
+    @apply flex min-h-11 items-center gap-3 rounded-xl px-3 py-3 text-[13px] font-medium text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-900;
+  }
+  .nav-link.active {
+    @apply bg-violet-50 font-bold text-violet-700;
+  }
+  .nav-counter {
+    @apply ml-auto rounded-md bg-violet-100 px-1.5 py-0.5 text-[10px] text-violet-700;
+  }
+  .sidebar-tip {
+    @apply my-8 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50/70 to-white p-4;
+  }
+  .app-main {
+    @apply min-w-0 lg:ml-60;
+  }
+  .topbar {
+    @apply sticky top-0 z-20 flex min-h-20 items-center justify-between gap-2 border-b border-slate-200/70 bg-white/95 px-4 backdrop-blur-sm sm:px-8;
+  }
+  .role-switch {
+    @apply flex shrink-0 rounded-xl border border-slate-200/70 bg-slate-100 p-1;
+  }
+  .role-switch button {
+    @apply flex items-center gap-1.5 rounded-lg px-2 py-2 text-[11px] font-semibold text-slate-500 sm:px-3 sm:text-xs;
+  }
+  .role-switch button.selected {
+    @apply bg-white text-violet-700 shadow-sm;
+  }
+  .avatar {
+    @apply grid size-10 shrink-0 place-items-center rounded-full bg-violet-100 font-bold text-violet-700;
+  }
+  .page-container {
+    @apply mx-auto min-h-[calc(100vh-150px)] max-w-[1440px] px-4 py-7 sm:px-8 sm:py-9 xl:px-10;
+  }
+  .page-heading {
+    @apply mb-7 flex flex-wrap items-end justify-between gap-5;
+  }
+  .page-heading h1 {
+    @apply text-[28px] font-bold leading-tight tracking-tight sm:text-[32px];
+  }
+  .eyebrow {
+    @apply mb-2 text-[10px] font-bold uppercase tracking-[.14em] text-slate-400;
+  }
+  .muted {
+    @apply leading-relaxed text-slate-500;
+  }
+  .btn {
+    @apply inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-colors;
+  }
+  .btn-primary {
+    @apply bg-violet-600 text-white shadow-sm shadow-violet-200 hover:bg-violet-700;
+  }
+  .btn-secondary {
+    @apply border border-slate-200 bg-white text-slate-600 hover:border-violet-300 hover:text-violet-700;
+  }
+  .icon-button {
+    @apply inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100;
+  }
+  .panel {
+    @apply rounded-2xl border border-slate-200/80 bg-white;
+  }
+  .panel-heading {
+    @apply flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-5;
+  }
+  .panel-heading h2 {
+    @apply font-bold;
+  }
+  .stat-card {
+    @apply rounded-2xl border border-slate-200/80 bg-white p-5;
+  }
+  .icon-tile {
+    @apply inline-grid size-10 shrink-0 place-items-center rounded-xl bg-violet-50 text-violet-600;
+  }
+  .task-card {
+    @apply flex min-w-0 flex-col rounded-2xl border border-slate-200/80 bg-white p-5 transition-colors hover:border-violet-200;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1 text-[10px] font-bold;
+  }
+  .badge.level-draft {
+    @apply bg-slate-100 text-slate-500;
+  }
+  .badge.level-working {
+    @apply bg-amber-50 text-amber-700;
+  }
+  .badge.level-ready {
+    @apply bg-emerald-50 text-emerald-700;
+  }
+  .badge.level-priority {
+    @apply bg-violet-50 text-violet-700;
+  }
+  .score.level-draft {
+    @apply text-slate-400;
+  }
+  .score.level-working {
+    @apply text-amber-500;
+  }
+  .score.level-ready {
+    @apply text-emerald-500;
+  }
+  .score.level-priority {
+    @apply text-violet-500;
+  }
+  .tag {
+    @apply rounded-md bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-500;
+  }
+  .empty-state {
+    @apply rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-14 text-center;
+  }
+  .field {
+    @apply flex flex-col gap-2 text-xs font-semibold text-slate-600;
+  }
+  .input {
+    @apply w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-normal text-slate-800 placeholder:text-slate-400 focus:border-violet-400;
+  }
+  .app-footer {
+    @apply mx-4 flex flex-wrap justify-between gap-2 border-t border-slate-200/70 py-5 text-[10px] text-slate-400 sm:mx-8;
+  }
+  .toast {
+    @apply fixed right-4 bottom-5 z-50 flex max-w-[calc(100vw-32px)] items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-xl sm:max-w-md;
+  }
+  .skeleton {
+    @apply animate-pulse rounded-xl bg-slate-200/60;
+  }
+}
+.modal {
+  margin: auto;
+  padding: 0;
+  width: min(620px, calc(100vw - 32px));
+  max-height: 85dvh;
+  border: 0;
+  border-radius: 20px;
+  color: #20243c;
+  box-shadow: 0 25px 80px #151b3530;
+}
+.modal::backdrop,
+.mobile-drawer::backdrop {
+  background: #171b3655;
+  backdrop-filter: blur(3px);
+}
+.mobile-drawer {
+  margin: 0;
+  height: 100dvh;
+  max-height: 100dvh;
+  width: min(290px, 85vw);
+  padding: 32px 20px;
+  border: none;
+  color: #20243c;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
