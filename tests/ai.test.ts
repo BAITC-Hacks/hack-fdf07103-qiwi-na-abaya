@@ -151,6 +151,41 @@ test("question text cannot be used as evidence; answers can", () => {
   );
   assert.throws(() => parseAnalysis({ ...analysis, questions: [] }));
 });
+test("empty AI fields preserve explicit input without filling unknown information", async () => {
+  const result = await createAIService(provider).structureTask(raw, [{
+    key: "users", question: "Кто использует результат?",
+    answer: "Маркетолог магазина анализирует уход покупателей.",
+  }]);
+  assert.equal(result.mode, "openai");
+  assert.equal(result.data.context, raw);
+  assert.equal(result.data.users, "Маркетолог магазина анализирует уход покупателей.");
+  assert.equal(result.data.dataMaterials, "");
+});
+test("a real but unrelated quote cannot fill an unknown factual field", async () => {
+  const result = await createAIService({
+    ...provider,
+    async structureTask() {
+      return {
+        card: { ...structured.card, dataMaterials: "Есть CRM с 10000 клиентов" },
+        evidence: { ...structured.evidence, dataMaterials: raw },
+      };
+    },
+  }).structureTask(raw, []);
+  assert.equal(result.reason, "invalid_response");
+  assert.equal(result.data.dataMaterials, "");
+});
+test("verified factual quotes cannot acquire invented details in paraphrases", () => {
+  const answer = {
+    key: "dataMaterials", question: "Какие данные есть?",
+    answer: "Есть обезличенная CSV-выгрузка заказов за шесть месяцев.",
+  };
+  const result = parseStructure({
+    card: { ...structured.card, dataMaterials: "Есть CSV и CRM с 10000 клиентов." },
+    evidence: { ...structured.evidence, dataMaterials: answer.answer },
+  }, raw, [answer]);
+  assert.equal(result.dataMaterials, answer.answer);
+  assert.ok(!result.dataMaterials.includes("10000"));
+});
 test("both operations time out even when a replacement provider ignores abort", async () => {
   let aborted = false;
   const hanging: AIProvider = {

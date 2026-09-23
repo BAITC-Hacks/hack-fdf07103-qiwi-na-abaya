@@ -4,6 +4,7 @@ import {
   extraQuestions,
   questionTarget,
   isKnown,
+  extractEvidence,
   type CardField,
   type TaskCardInput,
 } from "../task-assistant.ts";
@@ -35,7 +36,11 @@ export const analysisSchema = z.strictObject({
 export const structureSchema = z.strictObject({
   evidence: z.strictObject(
     Object.fromEntries(
-      fieldNames.map((key) => [key, z.string().max(8000)]),
+      fieldNames.map((key) => [key, z.string().max(8000).describe(
+        key === "title"
+          ? "Copy rawDescription verbatim here, never the generated title."
+          : "Exact continuous quote from the user's description or answer for this field; empty if unknown.",
+      )]),
     ) as Record<CardField, z.ZodString>,
   ),
   card: cardSchema,
@@ -71,6 +76,8 @@ export function parseStructure(
 ): TaskCardInput {
   const result = structureSchema.parse(value);
   const sources = [raw, ...answers.map((a) => a.answer)].map(normalized);
+  const rawFields = extractEvidence(raw);
+  const card = { ...result.card };
   for (const key of fieldNames) {
     const quote = normalized(result.evidence[key]);
     if (
@@ -78,6 +85,18 @@ export function parseStructure(
       (!isKnown(quote) || !sources.some((source) => source.includes(quote)))
     )
       throw new Error(`Unsupported AI field: ${key}`);
+    if (!card[key].trim() || key === "title") continue;
+    const fieldSources = [
+      rawFields[key],
+      ...answers.filter((answer) => questionTarget(answer.key) === key)
+        .map((answer) => answer.answer),
+    ].filter(isKnown).map(normalized);
+    if (!fieldSources.some((source) => source.includes(quote)))
+      throw new Error(`Unrelated AI evidence: ${key}`);
+    // A valid quote does not prove an AI paraphrase. Keep the verified user
+    // wording for factual fields so quantities, commitments and contacts cannot
+    // be invented alongside real evidence. The business can edit every field.
+    card[key] = result.evidence[key].trim();
   }
-  return result.card;
+  return cardSchema.parse(card);
 }

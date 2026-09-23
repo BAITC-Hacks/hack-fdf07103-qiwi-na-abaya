@@ -142,7 +142,15 @@ export function createAIService(provider?: AIProvider, timeoutMs = 20000) {
       return call(
         (signal) =>
           provider!.structureTask(rawDescription, knownAnswers, signal),
-        (value) => parseStructure(value, rawDescription, knownAnswers),
+        (value) => {
+          const parsed = parseStructure(value, rawDescription, knownAnswers);
+          const explicit = fallback();
+          // Empty AI fields must not erase information already supplied by the
+          // business. This adds only literal, deterministically extracted facts.
+          for (const key of Object.keys(parsed) as (keyof TaskCardInput)[])
+            if (!parsed[key].trim()) parsed[key] = explicit[key];
+          return parsed;
+        },
         fallback,
       );
     },
