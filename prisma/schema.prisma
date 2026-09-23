@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskStatus {
+  DRAFT
+  PUBLISHED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum ReadinessLevel {
+  DRAFT
+  WORKING
+  READY
+  PRIORITY
+}
+
+enum ProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Business {
+  id          String   @id @default(cuid())
+  name        String
+  contactName String
+  contact     String
+  createdAt   DateTime @default(now())
+  tasks       Task[]
+}
+
+model Team {
+  id           String     @id @default(cuid())
+  name         String
+  description  String
+  interests    Json       @default("[]")
+  skills       Json       @default("[]")
+  technologies Json       @default("[]")
+  createdAt    DateTime   @default(now())
+  proposals    Proposal[]
+}
+
+model Task {
+  id              String         @id @default(cuid())
+  title           String         @default("")
+  rawDescription  String         @default("")
+  industry        String         @default("")
+  context         String         @default("")
+  need            String         @default("")
+  users           String         @default("")
+  dataMaterials   String         @default("")
+  expectedResult  String         @default("")
+  successCriteria String         @default("")
+  constraints     String         @default("")
+  businessContact String         @default("")
+  skills          Json           @default("[]")
+  score           Int            @default(0)
+  readinessLevel  ReadinessLevel @default(DRAFT)
+  status          TaskStatus     @default(DRAFT)
+  businessId      String
+  business        Business       @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  confirmedAt     DateTime?
+  publishedAt     DateTime?
+  proposals       Proposal[]
+  clarifications  Clarification[]
+
+  @@index([businessId, status])
+  @@index([status, score])
+  @@index([industry])
+}
+
+model Proposal {
+  id            String         @id @default(cuid())
+  taskId        String
+  task          Task           @relation(fields: [taskId], references: [id], onDelete: Restrict)
+  teamId        String
+  team          Team           @relation(fields: [teamId], references: [id], onDelete: Restrict)
+  solutionIdea  String
+  plan          String
+  estimatedTime String
+  prototypeUrl  String         @default("")
+  status        ProposalStatus @default(PENDING)
+  createdAt     DateTime       @default(now())
+
+  @@unique([taskId, teamId])
+  @@index([taskId, status])
+  @@index([teamId])
+}
+
+model Clarification {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  field     String
+  question  String
+  answer    String   @default("")
+  position  Int
+  createdAt DateTime @default(now())
+
+  @@unique([taskId, position])
+}
