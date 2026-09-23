@@ -283,7 +283,7 @@ export default async function BusinessDashboard() {
         <section className="mt-7">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-bold">Готовы к сотрудничеству</h2>
-            <Link href="/catalog" className="text-xs text-violet-600">
+            <Link href="/tasks" className="text-xs text-violet-600">
               В каталог →
             </Link>
           </div>

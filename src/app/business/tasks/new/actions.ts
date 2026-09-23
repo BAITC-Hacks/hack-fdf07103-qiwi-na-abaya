@@ -260,6 +260,7 @@ export async function persistWizard(
     // Autosaves must not remount the wizard; transitions refresh data when navigation occurs.
     if (publishing) {
       revalidatePath("/catalog");
+      revalidatePath("/tasks");
       revalidatePath("/business");
       revalidatePath("/business/tasks");
     }

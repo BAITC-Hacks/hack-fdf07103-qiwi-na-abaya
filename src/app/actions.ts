@@ -20,7 +20,7 @@ export async function switchRole(data: FormData) {
   if (role !== "team" && role !== "business") return;
   (await cookies()).set("qadam-role", role, cookieOptions);
   redirect(
-    role === "team" ? "/catalog?notice=team" : "/business?notice=business",
+    role === "team" ? "/tasks?notice=team" : "/business?notice=business",
   );
 }
 export async function switchTeam(data: FormData) {

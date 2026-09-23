@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowUpRight, Inbox, MessageSquare } from "lucide-react";
+import { ArrowUpRight, Inbox, MessageSquare, Building2 } from "lucide-react";
 import type { Task } from "@prisma/client";
 import { getReadinessLevel, readinessLabels } from "@/lib/scoring";
+import { catalogDate } from "@/lib/catalog";
 import { dateLabel, statusLabels, tags } from "@/lib/presentation";
 
 export function PageHeading({
@@ -97,7 +98,7 @@ export function TaskCard({
   task,
   reason,
 }: {
-  task: Task & { _count: { proposals: number } };
+  task: Task & { business: { name: string }; _count: { proposals: number } };
   reason?: string;
 }) {
   return (
@@ -108,7 +109,11 @@ export function TaskCard({
         </span>
         <ReadinessBadge score={task.score} />
       </div>
-      <h2 className="text-lg font-bold leading-snug">
+      <p className="mb-3 flex items-center gap-1.5 text-xs text-slate-500">
+        <Building2 size={14} className="shrink-0" />
+        <span className="break-words">{task.business.name}</span>
+      </p>
+      <h2 className="break-words text-lg font-bold leading-snug">
         <Link className="hover:text-violet-700" href={`/tasks/${task.id}`}>
           {task.title || "Без названия"}
         </Link>
@@ -151,7 +156,10 @@ export function TaskCard({
         </Link>
       </div>
       <p className="mt-3 text-[11px] text-slate-400">
-        {statusLabels[task.status]} · {dateLabel(task.updatedAt)}
+        {statusLabels[task.status]} ·{" "}
+        <time dateTime={catalogDate(task).toISOString()}>
+          {dateLabel(catalogDate(task))}
+        </time>
       </p>
     </article>
   );

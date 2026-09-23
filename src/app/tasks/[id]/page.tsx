@@ -3,8 +3,11 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Building2, FileText, MessageSquare } from "lucide-react";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
-import { tags, statusLabels } from "@/lib/presentation";
+import { tags, statusLabels, dateLabel } from "@/lib/presentation";
 import { calculateReadiness } from "@/lib/scoring";
+import { Modal } from "@/components/interactive";
+import { ProposalForm } from "@/components/proposal-form";
+import { catalogDate } from "@/lib/catalog";
 import { ReadinessBadge, ScoreBar } from "@/components/ui";
 export default async function TaskDetail({
   params,
@@ -26,6 +29,15 @@ export default async function TaskDetail({
   )
     notFound();
   const { breakdown } = calculateReadiness(task);
+  const existingProposal =
+    session.role === "team" && session.team
+      ? await db.proposal.findUnique({
+          where: {
+            taskId_teamId: { taskId: task.id, teamId: session.team.id },
+          },
+          select: { id: true },
+        })
+      : null;
   const fields = [
     ["Контекст", task.context],
     ["Потребность / проблема", task.need],
@@ -40,7 +52,7 @@ export default async function TaskDetail({
     <>
       <Link
         className="mb-6 inline-flex items-center gap-2 text-xs font-semibold text-slate-500"
-        href={session.role === "business" ? "/business/tasks" : "/catalog"}
+        href={task.status === "DRAFT" ? "/business/tasks" : "/tasks"}
       >
         <ArrowLeft size={14} />
         Назад к задачам
@@ -63,12 +75,16 @@ export default async function TaskDetail({
             {statusLabels[task.status]}
           </span>
         </div>
-        <h1 className="max-w-3xl text-2xl font-bold leading-tight sm:text-3xl">
+        <h1 className="break-words max-w-3xl text-2xl font-bold leading-tight sm:text-3xl">
           {task.title}
         </h1>
         <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
           <Building2 size={15} />
           {task.business.name}
+          <span aria-hidden="true">·</span>
+          <time dateTime={catalogDate(task).toISOString()}>
+            {dateLabel(catalogDate(task))}
+          </time>
         </p>
       </div>
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.8fr)_minmax(280px,1fr)]">
@@ -94,9 +110,14 @@ export default async function TaskDetail({
               </div>
             ))}
           </section>
-          {tags(task.skills).length > 0 && (
+          {
             <section className="panel p-6">
               <h2 className="mb-4 text-sm font-bold">Навыки и технологии</h2>
+              {!tags(task.skills).length && (
+                <p className="muted text-sm">
+                  Навыки пока не указаны. Предложите подход, исходя из задачи.
+                </p>
+              )}
               <div className="flex flex-wrap gap-2">
                 {tags(task.skills).map((skill) => (
                   <span key={skill} className="tag">
@@ -105,7 +126,7 @@ export default async function TaskDetail({
                 ))}
               </div>
             </section>
-          )}
+          }
         </div>
         <aside className="space-y-5">
           <section className="panel p-6">
@@ -128,7 +149,7 @@ export default async function TaskDetail({
                   </div>
                   {item.missingFields.length > 0 && (
                     <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
-                      {item.hint}
+                      {item.missing.join(". ")}. {item.hint}
                     </p>
                   )}
                 </div>
@@ -145,6 +166,35 @@ export default async function TaskDetail({
                 ? "Черновик доступен только бизнесу и ещё не опубликован."
                 : "Рейтинг не ограничивает возможность предложить решение. Выбор команды остаётся за бизнесом."}
             </p>
+            {session.role === "team" &&
+              task.status === "PUBLISHED" &&
+              session.team && (
+                <div className="mt-5">
+                  {existingProposal ? (
+                    <>
+                      <p className="mb-3 text-xs font-semibold text-emerald-700">
+                        Ваша команда уже отправила отклик
+                      </p>
+                      <Link
+                        className="btn btn-secondary w-full"
+                        href="/team/proposals"
+                      >
+                        Посмотреть мой отклик
+                      </Link>
+                    </>
+                  ) : (
+                    <Modal
+                      title="Предложить решение"
+                      trigger="Предложить решение"
+                    >
+                      <ProposalForm
+                        taskId={task.id}
+                        teamName={session.team.name}
+                      />
+                    </Modal>
+                  )}
+                </div>
+              )}
             {session.role === "business" && (
               <Link
                 className="btn btn-secondary mt-4 w-full"

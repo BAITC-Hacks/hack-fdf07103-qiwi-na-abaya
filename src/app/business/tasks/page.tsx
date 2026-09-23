@@ -14,7 +14,10 @@ export default async function MyTasks({
   const tasks = business
     ? await db.task.findMany({
         where: { businessId: business.id },
-        include: { _count: { select: { proposals: true } } },
+        include: {
+          business: { select: { name: true } },
+          _count: { select: { proposals: true } },
+        },
       })
     : [];
   return (
@@ -34,6 +37,8 @@ export default async function MyTasks({
         <TaskList
           tasks={tasks}
           query={param(params.q)}
+          level={param(params.level)}
+          skill={param(params.skill)}
           industry={param(params.industry)}
           sort={param(params.sort) || "newest"}
           basePath="/business/tasks"

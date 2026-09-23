@@ -25,7 +25,7 @@ export function ProposalList({
             ? "После публикации команды смогут предложить свои подходы. Здесь появятся их идеи и планы."
             : "Ваши предложения и их статусы будут собраны здесь."
         }
-        href={business ? "/business/tasks" : "/catalog"}
+        href={business ? "/business/tasks" : "/tasks"}
         action={business ? "Открыть мои задачи" : "Посмотреть каталог"}
       />
     );
@@ -49,7 +49,7 @@ export function ProposalList({
               </div>
             </div>
             <span
-              className={`badge ${proposal.status === "ACCEPTED" ? "level-ready" : proposal.status === "REJECTED" ? "bg-rose-50 text-rose-700" : "level-working"}`}
+              className={`badge ${proposal.status === "ACCEPTED" ? "level-ready" : proposal.status === "REJECTED" ? "bg-rose-50 text-rose-700" : "level-workable"}`}
             >
               {proposalLabels[proposal.status]}
             </span>

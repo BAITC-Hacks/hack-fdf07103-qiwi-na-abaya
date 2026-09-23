@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Search, SlidersHorizontal } from "lucide-react";
 import type { Task } from "@prisma/client";
+import { filterAndSortTasks, taskSkills, uniqueOptions } from "@/lib/catalog";
+import { readinessLabels } from "@/lib/scoring";
+import { SubmitButton } from "./interactive";
 import { EmptyState, TaskCard } from "./ui";
 export type SearchParams = Promise<
   Record<string, string | string[] | undefined>
@@ -12,42 +15,40 @@ export function TaskList({
   query,
   industry,
   sort,
+  level = "",
+  skill = "",
   basePath,
 }: {
-  tasks: (Task & { _count: { proposals: number } })[];
+  tasks: (Task & {
+    business: { name: string };
+    _count: { proposals: number };
+  })[];
   query: string;
   industry: string;
   sort: string;
+  level?: string;
+  skill?: string;
   basePath: string;
 }) {
-  const industries = [
-    ...new Set(tasks.map((task) => task.industry).filter(Boolean)),
-  ].sort();
-  const normalized = query.trim().toLocaleLowerCase("ru");
-  const results = tasks
-    .filter(
-      (task) =>
-        (!industry || task.industry === industry) &&
-        (!normalized ||
-          [
-            task.title,
-            task.need,
-            task.rawDescription,
-            JSON.stringify(task.skills),
-          ]
-            .join(" ")
-            .toLocaleLowerCase("ru")
-            .includes(normalized)),
-    )
-    .sort((a, b) =>
-      sort === "score"
-        ? b.score - a.score
-        : b.updatedAt.getTime() - a.updatedAt.getTime(),
-    );
+  const industries = uniqueOptions(tasks.map((task) => task.industry));
+  const skills = uniqueOptions(
+    tasks.flatMap((task) => taskSkills(task.skills)),
+  );
+  const results = filterAndSortTasks(tasks, {
+    query,
+    industry,
+    level,
+    skill,
+    sort,
+  });
+  const filtered = Boolean(query || industry || level || skill);
   return (
     <>
       <form
+        key={[query, industry, level, skill, sort].join("|")}
         action={basePath}
+        method="get"
+        aria-label="Фильтры задач"
         className="panel mb-6 flex flex-wrap items-end gap-3 p-4"
       >
         <label className="field min-w-40 flex-1">
@@ -59,16 +60,45 @@ export function TaskList({
             className="input"
             name="q"
             defaultValue={query}
-            placeholder="Название, проблема или навык"
+            maxLength={200}
+            placeholder="Название, описание или навык"
           />
         </label>
         <label className="field w-full sm:w-44">
           Отрасль
           <select className="input" name="industry" defaultValue={industry}>
             <option value="">Все отрасли</option>
+            {industry && !industries.includes(industry) && (
+              <option value={industry}>{industry}</option>
+            )}
             {industries.map((item) => (
               <option key={item}>{item}</option>
             ))}
+          </select>
+        </label>
+        <label className="field w-full sm:w-44">
+          Уровень готовности
+          <select className="input" name="level" defaultValue={level}>
+            <option value="">Все уровни</option>
+            {Object.entries(readinessLabels).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="field w-full sm:w-44">
+          Навыки / технологии
+          <select className="input" name="skill" defaultValue={skill}>
+            <option value="">Все навыки</option>
+            {skills.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+            {skill && !skills.includes(skill) && (
+              <option value={skill}>{skill}</option>
+            )}
           </select>
         </label>
         <label className="field w-full sm:w-44">
@@ -78,11 +108,11 @@ export function TaskList({
             <option value="score">По готовности</option>
           </select>
         </label>
-        <button className="btn btn-primary">
+        <SubmitButton>
           <SlidersHorizontal size={14} />
           Применить
-        </button>
-        {(query || industry) && (
+        </SubmitButton>
+        {filtered && (
           <Link className="btn btn-secondary" href={basePath}>
             Сбросить
           </Link>
@@ -99,10 +129,18 @@ export function TaskList({
         </div>
       ) : (
         <EmptyState
-          title="Пока ничего не нашлось"
-          description="Попробуйте другой запрос или сбросьте фильтры."
-          href={basePath}
-          action="Показать все задачи"
+          title={
+            tasks.length
+              ? "Нет задач с такими параметрами"
+              : "Здесь скоро появятся задачи"
+          }
+          description={
+            tasks.length
+              ? "Попробуйте другой запрос или сбросьте фильтры — подходящий проект может быть рядом."
+              : "Бизнес готовит первые публикации. Возвращайтесь за новыми проектами."
+          }
+          href={filtered ? basePath : undefined}
+          action="Сбросить фильтры"
         />
       )}
     </>

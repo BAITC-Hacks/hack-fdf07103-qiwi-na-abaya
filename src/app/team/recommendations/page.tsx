@@ -7,7 +7,10 @@ export default async function Recommendations() {
   const { team } = await requireRole("team");
   const tasks = await db.task.findMany({
     where: { status: "PUBLISHED" },
-    include: { _count: { select: { proposals: true } } },
+    include: {
+      business: { select: { name: true } },
+      _count: { select: { proposals: true } },
+    },
   });
   const profile = team
     ? [

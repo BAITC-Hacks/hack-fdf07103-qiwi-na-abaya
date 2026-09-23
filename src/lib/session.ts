@@ -16,6 +16,6 @@ export async function getSession() {
 export async function requireRole(role: "business" | "team") {
   const session = await getSession();
   if (session.role !== role)
-    redirect(session.role === "team" ? "/catalog" : "/business");
+    redirect(session.role === "team" ? "/tasks" : "/business");
   return session;
 }

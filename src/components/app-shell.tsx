@@ -26,10 +26,10 @@ const businessLinks = [
   { href: "/business/tasks/new", label: "Создать задачу", icon: Plus },
   { href: "/business/tasks", label: "Мои задачи", icon: FolderOpen },
   { href: "/business/proposals", label: "Предложения", icon: MessageSquare },
-  { href: "/catalog", label: "Каталог", icon: Compass },
+  { href: "/tasks", label: "Каталог", icon: Compass },
 ];
 const teamLinks = [
-  { href: "/catalog", label: "Каталог задач", icon: Compass },
+  { href: "/tasks", label: "Каталог задач", icon: Compass },
   { href: "/team/recommendations", label: "Рекомендации", icon: Sparkles },
   { href: "/team/proposals", label: "Мои отклики", icon: MessageSquare },
   { href: "/team/profile", label: "Профиль команды", icon: Users },
@@ -56,7 +56,7 @@ export function AppShell({
     <>
       <Link
         className="brand"
-        href={role === "business" ? "/business" : "/catalog"}
+        href={role === "business" ? "/business" : "/tasks"}
         onClick={() => drawer.current?.close()}
       >
         <span className="brand-icon">

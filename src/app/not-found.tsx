@@ -4,7 +4,7 @@ export default function NotFound() {
     <EmptyState
       title="Задача не найдена"
       description="Возможно, она ещё не опубликована или ссылка изменилась."
-      href="/catalog"
+      href="/tasks"
       action="Открыть каталог"
     />
   );
