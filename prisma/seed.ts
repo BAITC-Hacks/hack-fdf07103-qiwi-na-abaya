@@ -97,7 +97,7 @@ async function main() {
       create: { id: `clarification-queue-${position}`, taskId: "draft-queue", position, ...question },
     });
   });
-  console.log("Seed готов: 1 бизнес, 5 команд, 5 публикаций (30/55/75/90/100), 5 черновиков, 5 предложений. Существующие записи сохранены.");
+  console.log("Seed готов: 1 бизнес, 5 команд, 5 публикаций (30/55/70/90/100), 5 черновиков, 5 предложений. Существующие записи сохранены.");
 }
 
 main().catch((error) => { console.error(error); process.exitCode = 1; }).finally(() => db.$disconnect());

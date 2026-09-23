@@ -548,7 +548,23 @@ export function TaskWizard({
               <h2 className="font-bold">Готовность задачи</h2>
               <ReadinessBadge score={readiness.score} />
             </div>
+            <div
+              key={readiness.score}
+              className="score-reveal mb-3 flex items-baseline gap-2"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <strong className="text-5xl font-bold tabular-nums tracking-tight text-violet-700">
+                {readiness.total}
+              </strong>
+              <span className="text-sm text-slate-400">из 100</span>
+            </div>
             <ScoreBar score={readiness.score} />
+            <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+              Оцениваем заполненность, а не стиль текста. Пусто или неизвестно —
+              0; кратко — половина; 4 разных слова и 20 знаков без пробелов —
+              полный балл. Дробные баллы округляются вниз.
+            </p>
             {state.maxStep >= 2 && (
               <p className="mt-3 text-xs text-slate-500">
                 Было после описания: {state.baselineScore} / 100
@@ -576,7 +592,7 @@ export function TaskWizard({
                   </div>
                   {item.missingFields.length > 0 && (
                     <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
-                      {item.hint}
+                      {item.missing.join(". ")} {item.hint}
                     </p>
                   )}
                 </div>
@@ -599,4 +615,3 @@ export function TaskWizard({
     </>
   );
 }
-

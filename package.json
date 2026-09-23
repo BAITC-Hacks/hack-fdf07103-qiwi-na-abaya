@@ -18,7 +18,8 @@
     "db:seed": "prisma db seed",
     "db:setup": "npm run db:generate && npm run db:deploy && npm run db:seed",
     "db:verify": "node scripts/verify-db.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:rescore": "node scripts/rescore.ts"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",

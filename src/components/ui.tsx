@@ -60,7 +60,7 @@ export function ScoreBar({
         className="h-1.5 overflow-hidden rounded-full bg-slate-100"
       >
         <div
-          className="h-full rounded-full bg-current"
+          className="h-full rounded-full bg-current transition-[width] duration-700 ease-out motion-reduce:transition-none"
           style={{ width: `${score}%` }}
         />
       </div>

@@ -16,7 +16,7 @@ enum TaskStatus {
 
 enum ReadinessLevel {
   DRAFT
-  WORKING
+  WORKABLE
   READY
   PRIORITY
 }

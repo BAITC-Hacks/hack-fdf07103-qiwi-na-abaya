@@ -133,7 +133,7 @@ button:disabled {
   .badge.level-draft {
     @apply bg-slate-100 text-slate-500;
   }
-  .badge.level-working {
+  .badge.level-workable {
     @apply bg-amber-50 text-amber-700;
   }
   .badge.level-ready {
@@ -145,7 +145,7 @@ button:disabled {
   .score.level-draft {
     @apply text-slate-400;
   }
-  .score.level-working {
+  .score.level-workable {
     @apply text-amber-500;
   }
   .score.level-ready {
@@ -207,5 +207,21 @@ button:disabled {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+@keyframes score-reveal {
+  from {
+    opacity: 0.55;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .score-reveal {
+    animation: score-reveal 450ms ease-out;
   }
 }

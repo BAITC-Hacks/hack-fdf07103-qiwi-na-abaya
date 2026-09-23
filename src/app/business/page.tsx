@@ -224,7 +224,7 @@ export default async function BusinessDashboard() {
               <h2 className="text-sm font-bold">Карта готовности</h2>
             </div>
             <div className="space-y-4">
-              {(["DRAFT", "WORKING", "READY", "PRIORITY"] as const).map(
+              {(["DRAFT", "WORKABLE", "READY", "PRIORITY"] as const).map(
                 (level, index) => {
                   const count = tasks.filter(
                     (task) => getReadinessLevel(task.score) === level,
