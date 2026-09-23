@@ -49,7 +49,7 @@ export function TaskList({
         action={basePath}
         method="get"
         aria-label="Фильтры задач"
-        className="panel mb-6 flex flex-wrap items-end gap-3 p-4"
+        className="panel catalog-filters mb-6 items-end gap-4 p-5"
       >
         <label className="field min-w-40 flex-1">
           <span className="flex items-center gap-2">
@@ -122,7 +122,7 @@ export function TaskList({
         Найдено задач: {results.length}
       </p>
       {results.length ? (
-        <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {results.map((task) => (
             <TaskCard task={task} key={task.id} editable={basePath === "/business/tasks"} />
           ))}

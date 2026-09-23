@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Save, Sparkles, Loader2 } from "lucide-react";
 import { cardFields, type CardField, type TaskCardInput } from "@/lib/task-assistant";
 import { calculateReadiness, readinessLabels } from "@/lib/scoring";
-import { PageHeading, ReadinessBadge, ScoreBar } from "./ui";
+import { CategoryProgress, PageHeading, ReadinessBadge, ScoreBar } from "./ui";
 import { updateTask, publishTask } from "@/app/business/tasks/[id]/edit/actions";
 
 export function TaskEditor({ id, initialCard, initialRevision, status }: { id: string; initialCard: TaskCardInput; initialRevision: number; status: string }) {
@@ -39,10 +39,9 @@ export function TaskEditor({ id, initialCard, initialRevision, status }: { id: s
     <PageHeading eyebrow="Рабочее пространство бизнеса" title="Редактирование задачи" description="Дополните карточку: готовность пересчитывается сразу. Сохранение не меняет статус публикации и решения по командам." action={<Link className="btn btn-secondary" href={`/tasks/${id}`}>Карточка задачи</Link>} />
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
       <aside className="order-first min-w-0 lg:order-last lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto" aria-label="Готовность задачи">
-        <section className="panel p-5">
+        <section className="panel readiness-panel p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><h2 className="font-bold">Готовность задачи</h2><ReadinessBadge score={readiness.total} /></div>
-          <p className="mb-3 text-4xl font-bold tabular-nums text-violet-700">{readiness.total}<span className="text-lg font-normal text-slate-400"> / 100</span></p>
-          <ScoreBar score={readiness.total} />
+          <ScoreBar score={readiness.total} prominent />
           <div aria-live="polite" aria-atomic="true" className="mt-3 text-xs leading-relaxed text-emerald-700">
             {readiness.total > baseline.total && <p className="font-bold">+{readiness.total - baseline.total} баллов с начала редактирования</p>}
             {readiness.total > baseline.total && readiness.level !== baseline.level && <p>Уровень повышен: {readinessLabels[baseline.level]} → {readinessLabels[readiness.level]}</p>}
@@ -51,7 +50,7 @@ export function TaskEditor({ id, initialCard, initialRevision, status }: { id: s
           {!readiness.suggestions.length && <p className="mb-4 text-xs text-emerald-700">Все категории заполнены.</p>}
           <div className="space-y-4">
             {readiness.categories.map(category => <div key={category.key}>
-              <div className="flex justify-between gap-3 text-xs"><span>{category.label}</span><strong className="shrink-0">{category.score} / {category.maxScore}</strong></div>
+              <CategoryProgress label={category.label} score={category.score} max={category.maxScore} />
               {category.missing.length > 0 && <><p className="mt-1 text-xs text-slate-500">{category.missing.join(". ")}</p><p className="mt-1 text-xs text-violet-700">{category.hint}</p></>}
             </div>)}
           </div>

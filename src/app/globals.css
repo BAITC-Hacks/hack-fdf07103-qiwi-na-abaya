@@ -6,8 +6,10 @@ body {
   margin: 0;
   background: #f7f8fc;
   color: #20243c;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
   font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 button,
 a,
@@ -62,13 +64,13 @@ button:disabled {
     @apply ml-auto rounded-md bg-violet-100 px-1.5 py-0.5 text-[10px] text-violet-700;
   }
   .sidebar-tip {
-    @apply my-8 rounded-2xl border border-violet-100 bg-gradient-to-br from-violet-50/70 to-white p-4;
+    @apply my-8 rounded-2xl border border-violet-100 bg-violet-50/50 p-4;
   }
   .app-main {
     @apply min-w-0 lg:ml-60;
   }
   .topbar {
-    @apply sticky top-0 z-20 flex min-h-20 items-center justify-between gap-2 border-b border-slate-200/70 bg-white/95 px-4 backdrop-blur-sm sm:px-8;
+    @apply sticky top-0 z-30 flex min-h-20 items-center justify-between gap-2 border-b border-slate-200/70 bg-white px-4 sm:px-8;
   }
   .role-switch {
     @apply flex shrink-0 rounded-xl border border-slate-200/70 bg-slate-100 p-1;
@@ -98,7 +100,7 @@ button:disabled {
     @apply leading-relaxed text-slate-500;
   }
   .btn {
-    @apply inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-colors;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-colors;
   }
   .btn-primary {
     @apply bg-violet-600 text-white shadow-sm shadow-violet-200 hover:bg-violet-700;
@@ -107,7 +109,7 @@ button:disabled {
     @apply border border-slate-200 bg-white text-slate-600 hover:border-violet-300 hover:text-violet-700;
   }
   .icon-button {
-    @apply inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100;
+    @apply inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100;
   }
   .panel {
     @apply rounded-2xl border border-slate-200/80 bg-white;
@@ -125,10 +127,10 @@ button:disabled {
     @apply inline-grid size-10 shrink-0 place-items-center rounded-xl bg-violet-50 text-violet-600;
   }
   .task-card {
-    @apply flex min-w-0 flex-col rounded-2xl border border-slate-200/80 bg-white p-5 transition-colors hover:border-violet-200;
+    @apply flex min-w-0 flex-col rounded-2xl border border-slate-200/80 bg-white p-5 transition-[border-color,box-shadow] duration-200 hover:border-violet-300 hover:shadow-md hover:shadow-slate-200/40 sm:p-6;
   }
   .badge {
-    @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-1 text-[10px] font-bold;
+    @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1 text-[11px] font-semibold;
   }
   .badge.level-draft {
     @apply bg-slate-100 text-slate-500;
@@ -143,28 +145,28 @@ button:disabled {
     @apply bg-violet-50 text-violet-700;
   }
   .score.level-draft {
-    @apply text-slate-400;
+    @apply text-slate-600;
   }
   .score.level-workable {
-    @apply text-amber-500;
+    @apply text-amber-700;
   }
   .score.level-ready {
-    @apply text-emerald-500;
+    @apply text-emerald-700;
   }
   .score.level-priority {
-    @apply text-violet-500;
+    @apply text-violet-700;
   }
   .tag {
-    @apply rounded-md bg-slate-100 px-2 py-1 text-[10px] font-medium text-slate-500;
+    @apply rounded-md bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600;
   }
   .empty-state {
     @apply rounded-2xl border border-dashed border-slate-200 bg-white px-5 py-14 text-center;
   }
   .field {
-    @apply flex flex-col gap-2 text-xs font-semibold text-slate-600;
+    @apply flex min-w-0 flex-col gap-2 text-[13px] font-semibold text-slate-700;
   }
   .input {
-    @apply w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-normal text-slate-800 placeholder:text-slate-400 focus:border-violet-400;
+    @apply w-full min-w-0 rounded-xl border border-slate-300 bg-white px-3 py-3 text-base font-normal text-slate-800 transition-[border-color,box-shadow] duration-150 placeholder:text-slate-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 sm:text-sm;
   }
   .app-footer {
     @apply mx-4 flex flex-wrap justify-between gap-2 border-t border-slate-200/70 py-5 text-[10px] text-slate-400 sm:mx-8;
@@ -199,6 +201,53 @@ button:disabled {
   padding: 32px 20px;
   border: none;
   color: #20243c;
+  overflow-y: auto;
+}
+.score-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.score-label { font-size: 12px; font-weight: 600; color: #475569; }
+.score-value { font-size: 28px; line-height: 1.1; letter-spacing: -.04em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.score-maximum { font-size: 13px; font-weight: 500; letter-spacing: 0; color: #64748b; }
+.score-track { height: 8px; overflow: hidden; border-radius: 999px; background: #e8ecf3; }
+.score-prominent .score-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
+.score-prominent .score-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.score-prominent .score-value { font-size: 56px; line-height: 1.1; }
+.score-prominent .score-maximum { font-size: 18px; }
+.score-prominent .score-track { height: 10px; }
+.readiness-panel { border-top: 3px solid #8b5cf6; box-shadow: 0 4px 20px #20243c05; }
+.task-card .score { padding: 14px; background: #f8fafc; border: 1px solid #edf0f5; border-radius: 12px; }
+.category-progress { color: #64748b; }
+.category-progress.is-complete { color: #047857; }
+.wizard-steps { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 20px; margin-bottom: 24px; }
+.wizard-steps li { min-width: 0; position: relative; }
+.wizard-steps li:not(:last-child)::after { content: "→"; position: absolute; top: 50%; right: -16px; transform: translateY(-50%); color: #94a3b8; }
+.wizard-step { min-height: 60px; transition: border-color 150ms, background-color 150ms; }
+.wizard-step[aria-current="step"] { box-shadow: 0 0 0 1px #c4b5fd; }
+.catalog-filters { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.catalog-filters > .field { width: auto; min-width: 0; }
+.catalog-filters > .field:first-child { grid-column: 1 / -1; }
+.tag, .task-card h2, .panel p, .modal p { overflow-wrap: anywhere; }
+textarea.input { resize: vertical; line-height: 1.65; }
+.btn svg { flex-shrink: 0; }
+.btn:active:not(:disabled) { filter: brightness(.96); }
+.role-switch button { min-height: 36px; transition: color 150ms, background-color 150ms; }
+.sidebar { overflow-y: auto; }
+.modal { overscroll-behavior: contain; }
+@media (min-width: 1280px) {
+  .catalog-filters { grid-template-columns: repeat(4,minmax(0,1fr)); }
+  .catalog-filters > .field:first-child { grid-column: span 2; }
+}
+@media (max-width: 639px) {
+  .wizard-steps { gap: 12px; }
+  .wizard-steps li:not(:last-child)::after { right: -10px; font-size: 10px; }
+  .wizard-step { flex-direction: column; justify-content: center; padding: 10px 2px; gap: 6px; }
+  .step-label { font-size: 10px; letter-spacing: -.02em; }
+  .topbar { padding-left: 12px; padding-right: 12px; }
+  .topbar > div:first-child { gap: 4px; }
+  .topbar > div:first-child > span:last-child { font-size: 12px; }
+  .catalog-filters { grid-template-columns: minmax(0,1fr); }
+  .task-card > div:last-of-type { flex-wrap: wrap; gap: 12px; }
+  .page-heading h1 { font-size: 27px; }
+  .role-switch button { padding-left: 7px; padding-right: 7px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *,

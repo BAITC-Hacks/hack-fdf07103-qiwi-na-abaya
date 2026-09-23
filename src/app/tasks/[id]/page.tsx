@@ -9,7 +9,7 @@ import { Modal } from "@/components/interactive";
 import { ProposalForm } from "@/components/proposal-form";
 import { ProposalList } from "@/components/proposal-list";
 import { catalogDate } from "@/lib/catalog";
-import { ReadinessBadge, ScoreBar } from "@/components/ui";
+import { CategoryProgress, ReadinessBadge, ScoreBar } from "@/components/ui";
 export default async function TaskDetail({
   params,
 }: {
@@ -58,7 +58,7 @@ export default async function TaskDetail({
   return (
     <>
       <Link
-        className="mb-6 inline-flex items-center gap-2 text-xs font-semibold text-slate-500"
+        className="mb-6 mr-5 inline-flex items-center gap-2 text-xs font-semibold text-slate-500"
         href={task.status === "DRAFT" ? "/business/tasks" : "/tasks"}
       >
         <ArrowLeft size={14} />
@@ -136,27 +136,16 @@ export default async function TaskDetail({
             </section>
           }
         </div>
-        <aside className="space-y-5">
-          <section className="panel p-6">
-            <h2 className="mb-5 font-bold">Готовность к старту</h2>
-            <ScoreBar score={task.score} />
+        <aside className="order-first min-w-0 space-y-5 xl:order-last xl:sticky xl:top-24">
+          <section className="panel readiness-panel p-6">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><h2 className="font-bold">Готовность задачи</h2><ReadinessBadge score={task.score} /></div>
+            <ScoreBar score={task.score} prominent />
             <div className="mt-6 space-y-4">
               {breakdown.map((item) => (
                 <div key={item.label}>
-                  <div className="flex justify-between gap-3 text-xs">
-                    <span className="text-slate-500">{item.label}</span>
-                    <strong
-                      className={
-                        item.points === item.max
-                          ? "text-emerald-600"
-                          : "text-slate-400"
-                      }
-                    >
-                      {item.points}/{item.max}
-                    </strong>
-                  </div>
+                  <CategoryProgress label={item.label} score={item.points} max={item.max} />
                   {item.missingFields.length > 0 && (
-                    <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
+                    <p className="mt-1 text-xs leading-relaxed text-slate-500">
                       {item.missing.join(". ")}. {item.hint}
                     </p>
                   )}

@@ -40,17 +40,19 @@ export function ReadinessBadge({ score }: { score: number }) {
 export function ScoreBar({
   score,
   label = "Готовность задачи",
+  prominent = false,
 }: {
   score: number;
   label?: string;
+  prominent?: boolean;
 }) {
   return (
-    <div className={`score level-${getReadinessLevel(score).toLowerCase()}`}>
-      <div className="mb-2 flex justify-between gap-3 text-xs">
-        <span className="text-slate-500">{label}</span>
-        <strong>
+    <div className={`score ${prominent ? "score-prominent" : ""} level-${getReadinessLevel(score).toLowerCase()}`}>
+      <div className="score-heading">
+        <span className="score-label">{label}</span>
+        <strong className="score-value">
           {score}
-          <span className="font-normal text-slate-400"> / 100</span>
+          <span className="score-maximum"> / 100</span>
         </strong>
       </div>
       <div
@@ -59,15 +61,27 @@ export function ScoreBar({
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={score}
-        className="h-1.5 overflow-hidden rounded-full bg-slate-100"
+        aria-valuetext={`${score} из 100 — ${readinessLabels[getReadinessLevel(score)]}`}
+        className="score-track"
       >
         <div
-          className="h-full rounded-full bg-current transition-[width] duration-700 ease-out motion-reduce:transition-none"
+          className="h-full rounded-full bg-current transition-[width] duration-300 ease-out motion-reduce:transition-none"
           style={{ width: `${score}%` }}
         />
       </div>
     </div>
   );
+}
+export function CategoryProgress({ label, score, max }: { label: string; score: number; max: number }) {
+  return <div className={`category-progress ${score === max ? "is-complete" : ""}`}>
+    <div className="flex items-baseline justify-between gap-3">
+      <span className="text-xs font-medium text-slate-700">{label}</span>
+      <strong className="shrink-0 text-xs tabular-nums">{score}<span className="font-normal text-slate-500"> / {max}</span></strong>
+    </div>
+    <div role="meter" aria-label={label} aria-valuenow={score} aria-valuemin={0} aria-valuemax={max} className="mt-2 h-1 overflow-hidden rounded-full bg-slate-100">
+      <div className="h-full rounded-full bg-current transition-[width] duration-300" style={{ width: `${score / max * 100}%` }} />
+    </div>
+  </div>;
 }
 export function EmptyState({
   title,
@@ -121,6 +135,7 @@ export function TaskCard({
           {task.title || "Без названия"}
         </Link>
       </h2>
+      <div className="mt-4"><ScoreBar score={task.score} /></div>
       <p className="muted mt-3 line-clamp-3 flex-1 text-sm">
         {task.need || task.rawDescription || "Описание ещё не заполнено."}
       </p>
@@ -139,7 +154,6 @@ export function TaskCard({
         ))}
         {match && !tags(task.skills).length && <span className="text-xs text-slate-400">Пока не указаны</span>}
       </div>
-      <ScoreBar score={task.score} />
       {editable && <Link className="btn btn-secondary mt-4" href={`/business/tasks/${task.id}/edit`}>Редактировать задачу</Link>}
       {task.status === "DRAFT" && (
         <Link

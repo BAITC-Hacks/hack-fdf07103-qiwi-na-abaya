@@ -17,9 +17,9 @@ import { persistWizard } from "@/app/business/tasks/new/actions";
 import { cardFields, type CardField } from "@/lib/task-assistant";
 import { type WizardOperation, type WizardState } from "@/lib/wizard-types";
 import { calculateReadiness } from "@/lib/scoring";
-import { PageHeading, ReadinessBadge, ScoreBar } from "./ui";
+import { CategoryProgress, PageHeading, ReadinessBadge, ScoreBar } from "./ui";
 
-const steps = ["Описание", "Уточнение", "Карточка", "Подтверждение"];
+const steps = ["Описание", "Уточнение", "Карточка", "Публикация"];
 export function TaskWizard({
   initial,
   businessId,
@@ -224,7 +224,7 @@ export function TaskWizard({
       </div>
       <ol
         aria-label="Этапы создания задачи"
-        className="mb-6 grid grid-cols-4 gap-2"
+        className="wizard-steps"
       >
         {steps.map((label, index) => (
           <li key={label}>
@@ -234,13 +234,12 @@ export function TaskWizard({
               onClick={() => {
                             void run("save", index + 1);
               }}
-              className={`flex w-full items-center gap-2 rounded-xl border p-3 text-left text-xs font-semibold sm:gap-3 sm:p-4 ${index + 1 === state.step ? "border-violet-300 bg-violet-50 text-violet-700" : index + 1 < state.step ? "border-emerald-100 bg-white text-emerald-700" : "border-slate-200 bg-white text-slate-400"} disabled:!cursor-default disabled:!opacity-100`}
+              className={`wizard-step flex w-full items-center gap-2 rounded-xl border p-3 text-left text-xs font-semibold sm:gap-3 sm:p-4 ${index + 1 === state.step ? "border-violet-300 bg-violet-50 text-violet-700" : index + 1 < state.step ? "border-emerald-100 bg-white text-emerald-700" : "border-slate-200 bg-white text-slate-400"} disabled:!cursor-default disabled:!opacity-100`}
             >
               <span className="grid size-6 shrink-0 place-items-center rounded-full border border-current text-[10px]">
                 {index + 1 < state.step ? <Check size={13} /> : index + 1}
               </span>
-              <span className="hidden sm:inline">{label}</span>
-              <span className="sr-only sm:hidden">{label}</span>
+              <span className="step-label">{label}</span>
             </button>
           </li>
         ))}
@@ -290,6 +289,10 @@ export function TaskWizard({
           {error}
         </div>
       )}
+      <div className="sticky top-20 z-20 mb-5 rounded-xl border border-violet-100 bg-white p-3 shadow-sm xl:hidden">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-semibold">Готовность задачи</span><ReadinessBadge score={readiness.score} /></div>
+        <ScoreBar score={readiness.score} label="Текущий рейтинг" />
+      </div>
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.8fr)_minmax(280px,1fr)]">
         <section className="panel min-w-0 p-5 sm:p-7" aria-busy={busy}>
           {busy &&
@@ -533,23 +536,12 @@ export function TaskWizard({
           </div>
         </section>
         <aside className="space-y-5 xl:sticky xl:top-24">
-          <section className="panel p-5">
-            <div className="mb-4 flex items-center justify-between">
+          <section className="panel readiness-panel p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <h2 className="font-bold">Готовность задачи</h2>
               <ReadinessBadge score={readiness.score} />
             </div>
-            <div
-              key={readiness.score}
-              className="score-reveal mb-3 flex items-baseline gap-2"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              <strong className="text-5xl font-bold tabular-nums tracking-tight text-violet-700">
-                {readiness.total}
-              </strong>
-              <span className="text-sm text-slate-400">из 100</span>
-            </div>
-            <ScoreBar score={readiness.score} />
+            <div aria-live="polite" aria-atomic="true"><ScoreBar score={readiness.score} prominent /></div>
             <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
               Оцениваем заполненность, а не стиль текста. Пусто или неизвестно —
               0; кратко — половина; 4 разных слова и 20 знаков без пробелов —
@@ -568,20 +560,9 @@ export function TaskWizard({
             <div className="mt-6 space-y-4">
               {readiness.breakdown.map((item) => (
                 <div key={item.label}>
-                  <div className="flex justify-between gap-3 text-xs">
-                    <span className="text-slate-500">{item.label}</span>
-                    <strong
-                      className={
-                        item.points === item.max
-                          ? "text-emerald-600"
-                          : "text-slate-400"
-                      }
-                    >
-                      {item.points}/{item.max}
-                    </strong>
-                  </div>
+                  <CategoryProgress label={item.label} score={item.points} max={item.max} />
                   {item.missingFields.length > 0 && (
-                    <p className="mt-1 text-[10px] leading-relaxed text-slate-400">
+                    <p className="mt-1 text-xs leading-relaxed text-slate-500">
                       {item.missing.join(". ")} {item.hint}
                     </p>
                   )}
