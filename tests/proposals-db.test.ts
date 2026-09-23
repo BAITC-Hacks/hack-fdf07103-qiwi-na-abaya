@@ -11,7 +11,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { PrismaClient } from "@prisma/client";
-import { createTeamProposal } from "../src/lib/proposal-storage.ts";
+import { createTeamProposal, decideProposal } from "../src/lib/proposal-storage.ts";
 test("SQLite: many teams can respond; pending state, counts, persistence and duplicate protection", async () => {
   const directory = mkdtempSync(join(tmpdir(), "qadam-proposals-test-"));
   const filename = join(directory, "test.db");
@@ -110,6 +110,33 @@ test("SQLite: many teams can respond; pending state, counts, persistence and dup
       }),
       7,
     );
+    const pending = await db.proposal.findMany({ where: { taskId: task.id }, orderBy: { id: "asc" } });
+    const decision = { proposalId: pending[0].id, status: "ACCEPTED" as const, expectedStatus: "PENDING" as const, confirmed: true as const };
+    await assert.rejects(() => decideProposal(db, "another-business", decision), /недоступно/);
+    await assert.rejects(() => decideProposal(db, business.id, { ...decision, confirmed: false as unknown as true }));
+    await assert.rejects(() => decideProposal(db, business.id, { ...decision, status: "PENDING" as unknown as "ACCEPTED" }));
+    await decideProposal(db, business.id, { ...decision, proposalId: pending[1].id, status: "REJECTED" });
+    assert.equal((await db.task.findUniqueOrThrow({ where: { id: task.id } })).status, "PUBLISHED");
+    await decideProposal(db, business.id, decision);
+    assert.equal((await db.task.findUniqueOrThrow({ where: { id: task.id } })).status, "IN_PROGRESS");
+    assert.equal((await db.proposal.findUniqueOrThrow({ where: { id: pending[0].id } })).status, "ACCEPTED");
+    assert.equal(await db.proposal.count({ where: { taskId: task.id, status: "PENDING" } }), 5);
+    await assert.rejects(() => decideProposal(db, business.id, { ...decision, status: "REJECTED" }), /уже изменился/);
+    // Selecting another team is always a separate, explicit business decision.
+    await decideProposal(db, business.id, { ...decision, proposalId: pending[2].id });
+    assert.equal(await db.proposal.count({ where: { taskId: task.id, status: "ACCEPTED" } }), 2);
+    await decideProposal(db, business.id, { ...decision, proposalId: pending[3].id, status: "REJECTED" });
+    assert.equal((await db.task.findUniqueOrThrow({ where: { id: task.id } })).status, "IN_PROGRESS");
+    // A deliberate revision is allowed, but a stale page cannot overwrite it.
+    await decideProposal(db, business.id, { ...decision, expectedStatus: "ACCEPTED", status: "REJECTED" });
+    assert.equal((await db.task.findUniqueOrThrow({ where: { id: task.id } })).status, "IN_PROGRESS");
+    await db.task.update({ where: { id: task.id }, data: { status: "COMPLETED" } });
+    await assert.rejects(() => decideProposal(db, business.id, { ...decision, proposalId: pending[4].id }), /только для/);
+    assert.equal((await db.proposal.findUniqueOrThrow({ where: { id: pending[4].id } })).status, "PENDING");
+    await db.$disconnect();
+    await db.$connect();
+    assert.equal(await db.proposal.count({ where: { taskId: task.id, status: "ACCEPTED" } }), 1);
+    assert.equal(await db.proposal.count({ where: { taskId: task.id, status: "REJECTED" } }), 3);
   } finally {
     await db.$disconnect();
     // Delete only files in the uniquely created test directory, no recursive removal.

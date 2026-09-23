@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Clock3, ExternalLink, MessageSquare } from "lucide-react";
 import type { Prisma } from "@prisma/client";
-import { proposalLabels, dateLabel } from "@/lib/presentation";
+import { proposalLabels, dateLabel, tags } from "@/lib/presentation";
+import { ProposalDecisionControls } from "./proposal-decision";
 import { EmptyState } from "./ui";
 import { Modal } from "./interactive";
 type Proposal = Prisma.ProposalGetPayload<{
@@ -13,9 +14,11 @@ type Proposal = Prisma.ProposalGetPayload<{
 export function ProposalList({
   proposals,
   business = false,
+  returnToTask = false,
 }: {
   proposals: Proposal[];
   business?: boolean;
+  returnToTask?: boolean;
 }) {
   if (!proposals.length)
     return (
@@ -63,6 +66,17 @@ export function ProposalList({
           <p className="muted my-4 max-w-3xl break-words whitespace-pre-wrap text-sm">
             {proposal.solutionIdea}
           </p>
+          {business && (
+            <div className="mb-5 space-y-4 text-sm">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div><p className="eyebrow">Навыки и технологии</p><div className="mt-2 flex flex-wrap gap-2">{[...new Set([...tags(proposal.team.skills), ...tags(proposal.team.technologies)])].map((skill) => <span className="tag" key={skill}>{skill}</span>)}{!tags(proposal.team.skills).length && !tags(proposal.team.technologies).length && <span className="muted">Пока не указаны</span>}</div></div>
+                <div><p className="eyebrow">Интересы</p><p className="muted mt-2 break-words">{tags(proposal.team.interests).join(" · ") || "Пока не указаны"}</p></div>
+              </div>
+              <div><p className="eyebrow">План работы</p><p className="muted mt-2 whitespace-pre-wrap break-words">{proposal.plan}</p></div>
+              {/^https?:\/\//i.test(proposal.prototypeUrl) ? <a className="inline-flex items-center gap-2 font-semibold text-violet-700" href={proposal.prototypeUrl} target="_blank" rel="noopener noreferrer">Открыть прототип <ExternalLink size={14} /></a> : <p className="text-xs text-slate-400">Прототип пока не приложен</p>}
+              {["PUBLISHED", "IN_PROGRESS"].includes(proposal.task.status) && <ProposalDecisionControls proposalId={proposal.id} status={proposal.status} teamName={proposal.team.name} taskTitle={proposal.task.title} returnToTask={returnToTask} />}
+            </div>
+          )}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
             <span className="flex items-center gap-2 text-xs text-slate-500">
               <Clock3 size={14} />

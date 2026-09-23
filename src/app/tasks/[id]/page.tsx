@@ -7,6 +7,7 @@ import { tags, statusLabels, dateLabel } from "@/lib/presentation";
 import { calculateReadiness } from "@/lib/scoring";
 import { Modal } from "@/components/interactive";
 import { ProposalForm } from "@/components/proposal-form";
+import { ProposalList } from "@/components/proposal-list";
 import { catalogDate } from "@/lib/catalog";
 import { ReadinessBadge, ScoreBar } from "@/components/ui";
 export default async function TaskDetail({
@@ -29,6 +30,12 @@ export default async function TaskDetail({
   )
     notFound();
   const { breakdown } = calculateReadiness(task);
+  const isOwner = session.role === "business" && session.business?.id === task.businessId;
+  const proposals = isOwner ? await db.proposal.findMany({
+    where: { taskId: task.id },
+    include: { team: true, task: { include: { business: { select: { name: true } } } } },
+    orderBy: { createdAt: "desc" },
+  }) : [];
   const existingProposal =
     session.role === "team" && session.team
       ? await db.proposal.findUnique({
@@ -167,7 +174,7 @@ export default async function TaskDetail({
                 : "Рейтинг не ограничивает возможность предложить решение. Выбор команды остаётся за бизнесом."}
             </p>
             {session.role === "team" &&
-              task.status === "PUBLISHED" &&
+              (task.status === "PUBLISHED" || existingProposal) &&
               session.team && (
                 <div className="mt-5">
                   {existingProposal ? (
@@ -195,10 +202,10 @@ export default async function TaskDetail({
                   )}
                 </div>
               )}
-            {session.role === "business" && (
+            {isOwner && (
               <Link
                 className="btn btn-secondary mt-4 w-full"
-                href="/business/proposals"
+                href="#proposals"
               >
                 Посмотреть предложения
               </Link>
@@ -206,6 +213,13 @@ export default async function TaskDetail({
           </section>
         </aside>
       </div>
+      {isOwner && <section id="proposals" className="mt-8 scroll-mt-6">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div><h2 className="text-xl font-bold">Предложения команд</h2><p className="muted mt-2 text-sm">Вы выбираете команды вручную. Можно принять несколько предложений.</p></div>
+          <Link href="/business/proposals" className="btn btn-secondary">Все предложения бизнеса</Link>
+        </div>
+        <ProposalList proposals={proposals} business returnToTask />
+      </section>}
     </>
   );
 }
