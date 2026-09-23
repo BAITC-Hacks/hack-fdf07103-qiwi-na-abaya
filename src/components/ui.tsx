@@ -4,6 +4,7 @@ import type { Task } from "@prisma/client";
 import { getReadinessLevel, readinessLabels } from "@/lib/scoring";
 import { catalogDate } from "@/lib/catalog";
 import { dateLabel, statusLabels, tags } from "@/lib/presentation";
+import type { TaskMatch } from "@/lib/recommendations";
 
 export function PageHeading({
   eyebrow,
@@ -96,10 +97,10 @@ export function EmptyState({
 }
 export function TaskCard({
   task,
-  reason,
+  match,
 }: {
   task: Task & { business: { name: string }; _count: { proposals: number } };
-  reason?: string;
+  match?: TaskMatch;
 }) {
   return (
     <article className="task-card">
@@ -121,17 +122,20 @@ export function TaskCard({
       <p className="muted mt-3 line-clamp-3 flex-1 text-sm">
         {task.need || task.rawDescription || "Описание ещё не заполнено."}
       </p>
-      {reason && (
-        <p className="mt-3 text-xs font-medium text-emerald-700">
-          Совпадения: {reason}
-        </p>
+      {match && (
+        <div className="mt-4 rounded-xl border border-violet-100 bg-violet-50 p-4">
+          <div className="flex items-center justify-between gap-3 text-violet-800"><span className="text-xs font-semibold">Совпадение с командой</span><strong className="text-xl">{match.matchScore}%</strong></div>
+          <ul className="mt-3 space-y-2 text-xs leading-relaxed text-violet-700">{match.reasons.map(reason => <li key={reason}>{reason}</li>)}</ul>
+        </div>
       )}
+      {match && <p className="mt-4 text-xs font-semibold text-slate-500">Необходимые навыки</p>}
       <div className="my-5 flex flex-wrap gap-2">
         {tags(task.skills).map((tag) => (
           <span className="tag" key={tag}>
             {tag}
           </span>
         ))}
+        {match && !tags(task.skills).length && <span className="text-xs text-slate-400">Пока не указаны</span>}
       </div>
       <ScoreBar score={task.score} />
       {task.status === "DRAFT" && (
@@ -152,7 +156,7 @@ export function TaskCard({
           href={`/tasks/${task.id}`}
           className="font-semibold text-violet-700"
         >
-          Подробнее <ArrowUpRight className="inline" size={14} />
+          {match ? "Посмотреть задачу" : "Подробнее"} <ArrowUpRight className="inline" size={14} />
         </Link>
       </div>
       <p className="mt-3 text-[11px] text-slate-400">
