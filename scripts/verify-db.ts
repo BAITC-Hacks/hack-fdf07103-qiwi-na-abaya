@@ -27,8 +27,15 @@ async function main() {
   }
   const lowScoreTask = published.find((task) => task.score < 40);
   assert.ok(lowScoreTask && proposals.some((proposal) => proposal.taskId === lowScoreTask.id));
+  assert.ok(proposals.some(p => p.status === "PENDING"));
+  assert.ok(proposals.some(p => p.status === "ACCEPTED"));
+  assert.ok(proposals.some(p => p.status === "REJECTED"));
+  for (const p of proposals.filter(p => p.status === "ACCEPTED")) assert.ok(["IN_PROGRESS", "COMPLETED"].includes(tasks.find(t => t.id === p.taskId)!.status));
+  const demo = tasks.find(t => t.id === "draft-demo-retention");
+  assert.ok(demo && demo.status === "DRAFT" && demo.score === 0);
+  assert.equal(demo.rawDescription, "Мы теряем клиентов интернет-магазина и хотим понять почему.");
   assert.deepEqual(await db.$queryRawUnsafe("PRAGMA foreign_key_check"), []);
-  console.log(JSON.stringify({ businesses, teams: teams.length, published: published.length, drafts: tasks.length - published.length, proposals: proposals.length, questions: questions.length, scores: published.map((task) => task.score) }, null, 2));
+  console.log(JSON.stringify({ businesses, teams: teams.length, published: published.length, drafts: tasks.filter(task => task.status === "DRAFT").length, proposals: proposals.length, questions: questions.length, scores: published.map((task) => task.score) }, null, 2));
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; }).finally(() => db.$disconnect());
 

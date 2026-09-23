@@ -1,104 +1,64 @@
 import "dotenv/config";
-import { PrismaClient, TaskStatus } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { calculateReadiness, type ScoringFields } from "../src/lib/scoring.ts";
-
 const db = new PrismaClient();
-const empty: ScoringFields = {
-  context: "", need: "", users: "", dataMaterials: "", expectedResult: "",
-  successCriteria: "", constraints: "", businessContact: "",
-};
-const contact = "Алия, координатор Qadam Market: demo@qadam.example. Созвон по средам, обратная связь в течение двух рабочих дней.";
-
+const empty: ScoringFields = {context:"",need:"",users:"",dataMaterials:"",expectedResult:"",successCriteria:"",constraints:"",businessContact:""};
+const contact = "Алия Садыкова, координатор Qadam Market. Встреча по средам, ответы на вопросы в течение двух рабочих дней; материалы передаём в общем рабочем пространстве.";
 const teams = [
-  { id: "team-steppe", name: "Steppe Digital", description: "Четыре студента КБТУ: создаём веб-сервисы для малого бизнеса и проверяем решения с пользователями.", interests: ["Ритейл", "Автоматизация"], skills: ["Frontend", "UX/UI"], technologies: ["TypeScript", "React", "Next.js"] },
-  { id: "team-data", name: "Data Nomads", description: "Команда аналитиков из Алматы. Работаем с табличными данными, прогнозами и понятными дашбордами.", interests: ["Аналитика", "Логистика"], skills: ["Анализ данных", "Визуализация"], technologies: ["Python", "SQL", "Pandas"] },
-  { id: "team-orbit", name: "Orbit Lab", description: "Три разработчика и дизайнер. Быстро собираем интерактивные прототипы и Telegram-ботов.", interests: ["Клиентский сервис", "Ритейл"], skills: ["Backend", "Прототипирование"], technologies: ["Node.js", "TypeScript", "Telegram API"] },
-  { id: "team-sana", name: "Sana Design", description: "Студенческая дизайн-команда: исследования, доступность интерфейсов и тестирование гипотез.", interests: ["Образование", "Пользовательский опыт"], skills: ["UX-исследования", "UX/UI"], technologies: ["Figma", "React"] },
-  { id: "team-green", name: "Green Code", description: "Делаем инструменты для сокращения отходов и улучшения операционных процессов небольших компаний.", interests: ["Устойчивое развитие", "Ритейл"], skills: ["Full-stack", "Анализ данных"], technologies: ["Next.js", "SQLite", "Python"] },
+ {id:"team-data",name:"DataForge",description:"Четыре студента-аналитика: очищаем табличные данные, строим прогнозы и объясняем результаты бизнесу. Начинаем с простой модели и проверяем её на отложенном периоде.",interests:["Аналитика","Ритейл","Маркетинг"],skills:["Анализ данных","ML","Визуализация"],technologies:["Python","Pandas","SQL"]},
+ {id:"team-steppe",name:"WebNova",description:"Команда веб-разработчиков и UX-дизайнера. Делаем понятные интерфейсы для сотрудников и покупателей, проверяем прототипы на реальных сценариях.",interests:["Клиентский сервис","Ритейл"],skills:["Frontend","UX/UI","Прототипирование"],technologies:["React","Next.js","TypeScript"]},
+ {id:"team-green",name:"GreenTech",description:"Изучаем энергопотребление зданий и данные датчиков. Ищем измеримые способы экономии без ухудшения условий работы сотрудников.",interests:["Энергоэффективность","Устойчивое развитие"],skills:["IoT","Data Analysis","Визуализация"],technologies:["Python","Pandas","MQTT"]},
+ {id:"team-sana",name:"VisionLab",description:"Три студента исследуют компьютерное зрение. Создаём прототипы на обезличенных изображениях и оцениваем ошибки до интеграции в бизнес-процесс.",interests:["Логистика","Ритейл"],skills:["Computer Vision","ML","Анализ данных"],technologies:["Python","OpenCV","PyTorch"]},
+ {id:"team-orbit",name:"AutomateX",description:"Разрабатываем небольшие инструменты автоматизации: интеграции API, классификацию обращений и внутренние панели. Сохраняем ручной контроль важных решений.",interests:["Клиентский сервис","Автоматизация"],skills:["Backend","APIs","Automation"],technologies:["Python","Node.js","SQL"]},
 ];
-
 const published = [
-  {
-    id: "task-feedback", title: "Собрать отзывы покупателей в одном месте", industry: "Ритейл",
-    rawDescription: "Отзывы приходят в разные чаты, хотим собирать их вместе и видеть частые жалобы.",
-    skills: ["UX-исследования", "React"],
-    fields: { context: "У Qadam Market три магазина у дома. Отзывы покупателей сейчас остаются в личных чатах администраторов.", need: "Нужен единый способ собирать отзывы, чтобы повторяющиеся проблемы не терялись.", users: "Администраторы трёх магазинов и операционный менеджер." },
-  },
-  {
-    id: "task-shifts", title: "Упростить согласование смен продавцов", industry: "Ритейл",
-    rawDescription: "Менеджеры вручную согласуют смены в мессенджере. Хотим понятный график и заявки на замену.",
-    skills: ["React", "UX/UI"],
-    fields: { context: "В трёх магазинах работают 18 продавцов; график хранится в таблице, замены обсуждаются в чате.", need: "Сократить потерянные заявки на замену и убрать конфликтующие версии расписания.", users: "Продавцы подают заявки, управляющие подтверждают изменения.", expectedResult: "Веб-прототип недельного расписания с созданием заявки на замену смены.", businessContact: contact },
-  },
-  {
-    id: "task-stock", title: "Показать товары с риском дефицита", industry: "Аналитика",
-    rawDescription: "Хотим видеть, какие товары скоро закончатся. Есть выгрузка продаж и остатков за последние восемь недель.",
-    skills: ["Python", "SQL", "Визуализация"],
-    fields: { context: "Закупщик вручную проверяет остатки 240 популярных товаров в трёх магазинах.", need: "Раньше замечать риск отсутствия товара на полке и формировать список для проверки закупщиком.", users: "Закупщик и управляющие магазинами.", dataMaterials: "Учебная CSV-выгрузка: дата, код товара, магазин, продажи, остаток за восемь недель. Координатор предоставит файл на первой встрече.", expectedResult: "Дашборд с фильтром магазина и списком товаров с предполагаемым запасом менее трёх дней.", businessContact: contact },
-  },
-  {
-    id: "task-onboarding", title: "Превратить обучение новых продавцов в короткие квесты", industry: "Образование",
-    rawDescription: "Новички читают длинную инструкцию и забывают правила. Нужны короткие учебные сценарии с вопросами.",
-    skills: ["UX/UI", "Next.js", "TypeScript"],
-    fields: { context: "За месяц Qadam Market нанимает до шести продавцов. Наставники повторяют вводный инструктаж каждому новичку.", need: "Помочь новичкам освоить кассу, возвраты и правила выкладки в первые три смены.", users: "Новые продавцы проходят обучение, наставник проверяет завершённые модули.", dataMaterials: "Координатор передаст учебную инструкцию из 12 страниц и пять типовых ситуаций без персональных данных.", expectedResult: "Мобильный веб-прототип из трёх учебных квестов с вопросами и сохранением прогресса.", successCriteria: "Пять тестовых пользователей завершают квест за десять минут; минимум четыре правильно отвечают на 80% вопросов.", businessContact: contact },
-  },
-  {
-    id: "task-waste", title: "Сократить списания свежей выпечки", industry: "Устойчивое развитие",
-    rawDescription: "Вечером списываем выпечку. Нужно сравнить продажи по дням недели и предложить объём заказа на следующий день.",
-    skills: ["Python", "Анализ данных", "Next.js"],
-    fields: { context: "Три магазина Qadam Market ежедневно заказывают выпечку. Объём заказа сейчас выбирают по опыту администратора.", need: "Сделать ежедневный заказ более обоснованным и уменьшить остатки к закрытию.", users: "Администраторы магазинов и менеджер закупок.", dataMaterials: "Учебный CSV за 60 дней: магазин, дата, позиция, заказано, продано, списано. Файл предоставит координатор; персональных данных нет.", expectedResult: "Дашборд списаний и расчёт рекомендуемого заказа на завтра с объяснением расчёта.", successCriteria: "Импортируются все строки тестового файла; суммы совпадают с контрольной таблицей; рекомендация выводится для каждой позиции и магазина.", constraints: "Прототип за две недели, без платных сервисов и интеграции с кассой. Итоговый заказ подтверждает менеджер.", businessContact: contact },
-  },
+ {id:"task-retention",title:"Выяснить, почему покупатели не возвращаются в интернет-магазин",industry:"Ритейл",skills:["Python","Анализ данных","UX-исследования"],rawDescription:"За последние месяцы стало меньше повторных заказов. Хотим разобраться в причинах и выбрать, что улучшать первым.",fields:{context:"Qadam Market продаёт товары для дома через интернет-магазин и три офлайн-точки. Команда заметила снижение повторных заказов.",need:"Понять, на каком этапе покупатели теряют интерес и какие причины стоит проверить интервью.",expectedResult:"Карта возможных причин оттока и план проверки трёх приоритетных гипотез."}},
+ {id:"task-energy",title:"Снизить энергопотребление офиса без потери комфорта",industry:"Энергоэффективность",skills:["IoT","Python","Data Analysis"],rawDescription:"Счета за электричество в офисе растут. Хотим найти избыточное потребление в нерабочие часы.",fields:{context:"В офисе Qadam Market работают 35 сотрудников. Освещение и климатическое оборудование часто остаются включёнными после закрытия.",need:"Выявить периоды лишнего потребления и предложить безопасный режим работы оборудования.",expectedResult:"Отчёт о возможной экономии и наглядный недельный график потребления электроэнергии.",users:"Офис-менеджер выбирает режим работы, инженер проверяет техническую осуществимость рекомендаций.",businessContact:contact}},
+ {id:"task-demand",title:"Прогнозировать спрос на популярные товары на две недели",industry:"Аналитика",skills:["Python","Pandas","ML"],rawDescription:"Закупки планируем по прошлой неделе, поэтому часть товаров заканчивается раньше поставки. Есть история продаж за год.",fields:{context:"Закупщик планирует поставки 120 популярных товаров в три магазина. Праздники и акции сильно меняют продажи.",need:"Подготовить объяснимый прогноз спроса, чтобы уменьшить дефицит и излишки на складе.",expectedResult:"Прогноз по товарам на 14 дней с сравнением простой базовой модели и рекомендациями закупщику.",users:"Закупщик просматривает прогноз по магазину и вручную согласует объём следующей поставки.",dataMaterials:"Обезличенный CSV за 12 месяцев: дата, товар, магазин, продажи, остатки и флаг акции. Координатор передаст файл после первой встречи.",businessContact:contact}},
+ {id:"task-support",title:"Ускорить разбор обращений клиентов без автоматических ответов",industry:"Клиентский сервис",skills:["Backend","APIs","Python","React"],rawDescription:"Операторы вручную распределяют обращения из формы сайта. Хотим подсказки категорий и единый список заявок.",fields:{context:"Два оператора обрабатывают около 80 обращений в день. Вопросы о доставке, возвратах и оплате смешиваются в одном списке.",need:"Сократить время первичного разбора заявок и не потерять срочные обращения покупателей.",expectedResult:"Прототип панели с фильтрами и предложенной категорией обращения, которую оператор может исправить.",users:"Операторы просматривают очередь, руководитель службы поддержки проверяет качество распределения.",dataMaterials:"Предоставим 500 учебных обезличенных обращений и справочник категорий. Тексты очищены от имён, телефонов и номеров заказов.",businessContact:contact,successCriteria:"Точность 85%",constraints:"Две недели"}},
+ {id:"task-marketing",title:"Сравнить отдачу рекламных кампаний и повторные покупки",industry:"Маркетинг",skills:["Python","SQL","Анализ данных","Визуализация"],rawDescription:"Маркетолог видит клики и расходы отдельно от заказов. Нужен понятный отчёт, какие кампании приносят покупки.",fields:{context:"Qadam Market запускает рекламу в трёх каналах. Расходы хранятся в рекламных отчётах, заказы — в отдельной выгрузке.",need:"Сопоставить расходы и выручку по кампаниям, явно показать ограничения атрибуции и качество исходных данных.",expectedResult:"Дашборд расходов, выручки и повторных покупок по кампаниям с фильтрами периода и канала.",users:"Маркетолог сравнивает кампании, руководитель вручную решает, как перераспределить бюджет.",dataMaterials:"Передадим учебные CSV за полгода с расходами, UTM-метками и заказами с обезличенными идентификаторами. Справочник кампаний приложен.",businessContact:contact,successCriteria:"Итоги выручки совпадают с контрольной таблицей; десять выбранных кампаний проверены вручную, неизвестные источники показаны отдельно.",constraints:"Без интеграций"}},
 ];
-
 const drafts = [
-  { id: "draft-queue", title: "Очереди на кассе по вечерам", rawDescription: "По вечерам очередь. Хотим понять, когда открывать вторую кассу.", industry: "Ритейл" },
-  { id: "draft-loyalty", title: "Вернуть постоянных покупателей", rawDescription: "Нужна программа лояльности, но ещё не решили, что давать покупателям.", industry: "Маркетинг" },
-  { id: "draft-delivery", title: "Сделать доставку предсказуемой", rawDescription: "Курьеры иногда опаздывают. Хотим удобнее планировать маршруты.", industry: "Логистика" },
-  { id: "draft-suppliers", title: "Сравнение условий поставщиков", rawDescription: "Прайсы поставщиков приходят в разных форматах. Сложно быстро сравнить цены.", industry: "Закупки" },
-  { id: "draft-energy", title: "Понять расходы на электричество", rawDescription: "Счета за электричество растут. Нужна наглядная статистика по магазинам.", industry: "Устойчивое развитие" },
+ {id:"draft-demo-retention",title:"Демо: от слабой идеи к готовой задаче",industry:"",rawDescription:"Мы теряем клиентов интернет-магазина и хотим понять почему."},
+ {id:"draft-queue",title:"Сократить ожидание покупателей у кассы",industry:"Ритейл",rawDescription:"По вечерам образуются очереди. Хотим понять, когда стоит открывать вторую кассу."},
+ {id:"draft-delivery",title:"Разобраться в задержках доставки",industry:"Логистика",rawDescription:"Клиенты жалуются на опоздания курьеров. Хотим разобраться, где теряем время."},
+ {id:"draft-suppliers",title:"Сравнивать прайсы поставщиков",industry:"Автоматизация",rawDescription:"Прайсы приходят в разных таблицах. Закупщик тратит много времени на сравнение цен."},
+ {id:"draft-receipts",title:"Проверять читаемость фотографий чеков",industry:"Ритейл",rawDescription:"Покупатели прикладывают размытые фотографии чеков. Нужна подсказка, когда стоит переснять фото."},
 ];
-
+const active = [
+ {id:"task-energy-pilot",title:"Пилот: найти ночное потребление в офисе",source:1,status:"IN_PROGRESS" as const},
+ {id:"task-demand-pilot",title:"Пилот: прогноз спроса для одной торговой точки",source:2,status:"IN_PROGRESS" as const},
+ {id:"task-support-pilot",title:"Пилот: панель категорий клиентских обращений",source:3,status:"COMPLETED" as const},
+];
+const proposals = [
+ {id:"proposal-demo-1",taskId:"task-retention",teamId:"team-data",status:"PENDING" as const,solutionIdea:"Сравнить когорты повторных покупок и подготовить вопросы для интервью ушедших клиентов.",plan:"Уточнить доступность данных; описать воронку; выбрать три гипотезы; согласовать план проверки с бизнесом.",estimatedTime:"10 рабочих дней"},
+ {id:"proposal-demo-2",taskId:"task-energy",teamId:"team-green",status:"PENDING" as const,solutionIdea:"Сопоставить профиль нагрузки с часами работы и выделить периоды потенциальной экономии.",plan:"Согласовать состав показаний; построить график; проверить ночные пики с инженером; подготовить рекомендации.",estimatedTime:"2 недели"},
+ {id:"proposal-demo-3",taskId:"task-demand",teamId:"team-data",status:"PENDING" as const,solutionIdea:"Сравнить скользящее среднее и модель с календарными признаками на отложенных неделях.",plan:"Проверить пропуски и отсутствие товара; сделать базовый прогноз; оценить ошибки; показать отчёт закупщику.",estimatedTime:"12 рабочих дней"},
+ {id:"proposal-demo-4",taskId:"task-support",teamId:"team-steppe",status:"PENDING" as const,solutionIdea:"Создать веб-панель обращений с ручной коррекцией категории и фильтрами приоритета.",plan:"Согласовать сценарии оператора; собрать интерфейс на Next.js; подключить учебный набор; провести проверку удобства.",estimatedTime:"2 недели"},
+ {id:"proposal-demo-5",taskId:"task-marketing",teamId:"team-sana",status:"REJECTED" as const,solutionIdea:"Исследовать визуальные признаки рекламных креативов и связать их с конверсией.",plan:"Согласовать набор изображений; выделить признаки; сравнить группы объявлений и подготовить отчёт.",estimatedTime:"3 недели"},
+ {id:"proposal-demo-6",taskId:"task-energy-pilot",teamId:"team-green",status:"ACCEPTED" as const,solutionIdea:"Проверить ночные пики нагрузки на учебных показаниях и сформировать рекомендации инженеру.",plan:"Очистить показания; выделить ночные интервалы; согласовать причины; оценить возможную экономию.",estimatedTime:"2 недели",progressPercent:40,progressComment:"Проверили полноту почасовых показаний и нашли три ночных пика. Графики готовы, ожидаем комментарий инженера.",submittedAt:new Date("2026-09-22T09:00:00Z"),confirmedByBusiness:true,confirmedPercent:40,awardedPoints:40,progressRevision:2},
+ {id:"proposal-demo-7",taskId:"task-demand-pilot",teamId:"team-data",status:"ACCEPTED" as const,solutionIdea:"Проверить прогноз на одной торговой точке до масштабирования на всю сеть.",plan:"Подготовить выборку; сравнить модели; разобрать ошибки с закупщиком; передать прототип отчёта.",estimatedTime:"12 рабочих дней",progressPercent:100,progressComment:"Прототип отчёта готов. Сравнили модели на последних четырёх неделях и приложили список товаров с нестабильным спросом. Просим проверить результат.",submittedAt:new Date("2026-09-23T07:30:00Z"),confirmedByBusiness:false,confirmedPercent:60,awardedPoints:60,progressRevision:3},
+ {id:"proposal-demo-8",taskId:"task-support-pilot",teamId:"team-orbit",status:"ACCEPTED" as const,solutionIdea:"Собрать простую панель с предложением категории и окончательным выбором оператора.",plan:"Подготовить правила; реализовать API; добавить ручную коррекцию; проверить 100 контрольных обращений.",estimatedTime:"10 рабочих дней",progressPercent:100,progressComment:"Операторы проверили контрольную выборку и подтвердили категории. Инструкция и исходный код переданы координатору, пилот завершён.",submittedAt:new Date("2026-09-21T12:00:00Z"),confirmedByBusiness:true,confirmedPercent:100,awardedPoints:100,progressRevision:4},
+];
 async function main() {
-  await db.$transaction(async (tx) => {
-    await tx.business.upsert({ where: { id: "business-qadam" }, update: {}, create: {
-      id: "business-qadam", name: "Qadam Market", contactName: "Алия Садыкова", contact,
-    } });
-    for (const team of teams) await tx.team.upsert({ where: { id: team.id }, update: {}, create: team });
-    for (const item of published) {
-      const { fields: provided, ...details } = item;
-      const fields = { ...empty, ...provided };
-      const { score, readinessLevel } = calculateReadiness(fields);
-      await tx.task.upsert({ where: { id: item.id }, update: {}, create: {
-        ...details, ...fields, score, readinessLevel, businessId: "business-qadam",
-        status: TaskStatus.PUBLISHED, confirmedAt: new Date("2026-09-23T06:00:00Z"), publishedAt: new Date("2026-09-23T06:00:00Z"),
-      } });
-    }
-    for (const draft of drafts) await tx.task.upsert({ where: { id: draft.id }, update: {}, create: {
-      ...draft, businessId: "business-qadam", status: TaskStatus.DRAFT,
-    } });
-    const ideas = [
-      { taskId: "task-feedback", teamId: "team-sana", solutionIdea: "QR-форма отзыва и экран повторяющихся тем для администратора.", plan: "Провести три интервью, собрать прототип формы, проверить его с пятью покупателями.", estimatedTime: "7 дней" },
-      { taskId: "task-shifts", teamId: "team-steppe", solutionIdea: "Недельный календарь смен с заявками и ручным подтверждением менеджера.", plan: "Уточнить правила замен, сделать календарь и форму заявки, провести тест с двумя управляющими.", estimatedTime: "10 дней" },
-      { taskId: "task-stock", teamId: "team-data", solutionIdea: "Рассчитать запас в днях по средней скорости продаж и выделить товары для проверки.", plan: "Проверить CSV, рассчитать показатели, собрать дашборд и сравнить итоги с закупщиком.", estimatedTime: "12 дней" },
-      { taskId: "task-onboarding", teamId: "team-orbit", solutionIdea: "Три интерактивных учебных сценария с прогрессом и обратной связью после вопроса.", plan: "Разобрать инструкцию, согласовать вопросы, создать веб-прототип, протестировать на новичках.", estimatedTime: "14 дней" },
-      { taskId: "task-waste", teamId: "team-green", solutionIdea: "Показать списания по дням недели и дать объяснимый прогноз объёма заказа.", plan: "Загрузить CSV, проверить итоги, реализовать расчёт и ручную корректировку, провести демонстрацию.", estimatedTime: "14 дней" },
-    ];
-    for (const [index, proposal] of ideas.entries()) await tx.proposal.upsert({
-      where: { taskId_teamId: { taskId: proposal.taskId, teamId: proposal.teamId } }, update: {},
-      create: { id: `proposal-demo-${index + 1}`, ...proposal, prototypeUrl: `https://example.com/prototypes/${proposal.teamId}` },
-    });
-    const questions = [
-      { field: "users", question: "Кто будет пользоваться решением и принимать решение об открытии второй кассы?" },
-      { field: "dataMaterials", question: "Есть ли данные о времени покупок, длине очереди или расписании кассиров?" },
-      { field: "successCriteria", question: "Какое время ожидания вы считаете приемлемым и как его измерите?" },
-    ];
-    for (const [position, question] of questions.entries()) await tx.clarification.upsert({
-      where: { taskId_position: { taskId: "draft-queue", position } }, update: {},
-      create: { id: `clarification-queue-${position}`, taskId: "draft-queue", position, ...question },
-    });
-  });
-  console.log("Seed готов: 1 бизнес, 5 команд, 5 публикаций (30/55/70/90/100), 5 черновиков, 5 предложений. Существующие записи сохранены.");
+ await db.$transaction(async tx => {
+  await tx.business.upsert({where:{id:"business-qadam"},update:{},create:{id:"business-qadam",name:"Qadam Market",contactName:"Алия Садыкова",contact}});
+  for(const team of teams) await tx.team.upsert({where:{id:team.id},update:{},create:team});
+  for(const [index,item] of published.entries()) {
+   const {fields:provided,...details}=item;const fields={...empty,...provided};const {score,readinessLevel}=calculateReadiness(fields);
+   const date=new Date(Date.UTC(2026,8,18+index,8));
+   await tx.task.upsert({where:{id:item.id},update:{},create:{...details,...fields,score,readinessLevel,businessId:"business-qadam",status:"PUBLISHED",createdAt:date,publishedAt:date,confirmedAt:date}});
+  }
+  for(const item of active) {
+   const source=published[item.source];const fields={...empty,...source.fields};const {score,readinessLevel}=calculateReadiness(fields);
+   await tx.task.upsert({where:{id:item.id},update:{},create:{id:item.id,title:item.title,industry:source.industry,rawDescription:source.rawDescription,skills:source.skills,...fields,score,readinessLevel,businessId:"business-qadam",status:item.status,createdAt:new Date("2026-09-15T08:00:00Z"),publishedAt:new Date("2026-09-15T08:00:00Z"),confirmedAt:new Date("2026-09-15T08:00:00Z")}});
+  }
+  const draftRating = calculateReadiness(empty);
+  for(const draft of drafts) await tx.task.upsert({where:{id:draft.id},update:{},create:{...draft,...empty,score:draftRating.total,readinessLevel:draftRating.level,businessId:"business-qadam",status:"DRAFT"}});
+  for(const proposal of proposals) await tx.proposal.upsert({where:{taskId_teamId:{taskId:proposal.taskId,teamId:proposal.teamId}},update:{},create:{...proposal,prototypeUrl:"",createdAt:new Date(Date.UTC(2026,8,proposal.status === "ACCEPTED" ? 16 : 23,7))}});
+  for(const [position,question] of ["Кто принимает решение об открытии второй кассы?","Есть ли почасовые данные о покупках и расписании кассиров?","Какое время ожидания считается приемлемым?"].entries()) await tx.clarification.upsert({where:{taskId_position:{taskId:"draft-queue",position}},update:{},create:{taskId:"draft-queue",position,field:["users","dataMaterials","successCriteria"][position],question}});
+ });
+ const cards=await db.task.findMany({where:{status:"PUBLISHED"},select:{title:true,score:true,readinessLevel:true},orderBy:{score:"asc"}});
+ console.log(JSON.stringify({published:cards,demoDraft:"draft-demo-retention",teams:teams.length,proposals:proposals.length},null,2));
 }
-
-main().catch((error) => { console.error(error); process.exitCode = 1; }).finally(() => db.$disconnect());
-
+main().catch(error=>{console.error(error);process.exitCode=1;}).finally(()=>db.$disconnect());
