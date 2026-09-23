@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProposalProgress } from "./proposal-progress";
 import { Clock3, ExternalLink, MessageSquare } from "lucide-react";
 import type { Prisma } from "@prisma/client";
 import { proposalLabels, dateLabel, tags } from "@/lib/presentation";
@@ -77,6 +78,7 @@ export function ProposalList({
               {["PUBLISHED", "IN_PROGRESS"].includes(proposal.task.status) && <ProposalDecisionControls proposalId={proposal.id} status={proposal.status} teamName={proposal.team.name} taskTitle={proposal.task.title} returnToTask={returnToTask} />}
             </div>
           )}
+          {proposal.status === "ACCEPTED" && ["IN_PROGRESS", "COMPLETED"].includes(proposal.task.status) && <ProposalProgress business={business} completed={proposal.task.status === "COMPLETED"} proposal={{ id: proposal.id, progressPercent: proposal.progressPercent, progressComment: proposal.progressComment, submittedAt: proposal.submittedAt?.toISOString() ?? null, confirmedByBusiness: proposal.confirmedByBusiness, confirmedPercent: proposal.confirmedPercent, awardedPoints: proposal.awardedPoints, progressRevision: proposal.progressRevision }} />}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
             <span className="flex items-center gap-2 text-xs text-slate-500">
               <Clock3 size={14} />

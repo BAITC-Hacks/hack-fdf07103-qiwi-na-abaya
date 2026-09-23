@@ -93,6 +93,14 @@ model Proposal {
   status        ProposalStatus @default(PENDING)
   createdAt     DateTime       @default(now())
 
+  progressPercent     Int       @default(0)
+  progressComment     String    @default("")
+  submittedAt         DateTime?
+  confirmedByBusiness Boolean   @default(false)
+  confirmedPercent    Int       @default(0)
+  awardedPoints       Int       @default(0)
+  progressRevision    Int       @default(0)
+
   @@unique([taskId, teamId])
   @@index([taskId, status])
   @@index([teamId])

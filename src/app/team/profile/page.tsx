@@ -14,9 +14,10 @@ export default async function TeamProfile() {
         description="Добавьте демонстрационные команды, чтобы начать."
       />
     );
-  const [total, accepted] = await Promise.all([
+  const [total, accepted, points] = await Promise.all([
     db.proposal.count({ where: { teamId: team.id } }),
     db.proposal.count({ where: { teamId: team.id, status: "ACCEPTED" } }),
+    db.proposal.aggregate({ where: { teamId: team.id }, _sum: { awardedPoints: true } }),
   ]);
   const editForm = (
     <form action={saveProfile} className="space-y-4">
@@ -133,6 +134,7 @@ export default async function TeamProfile() {
               </div>
             </div>
           </div>
+          <div className="panel p-5"><h2 className="text-sm font-bold">Баллы команды</h2><p className="my-3 text-3xl font-bold text-violet-700">{points._sum.awardedPoints ?? 0}</p><p className="text-xs leading-relaxed text-slate-500">За прогресс, вручную подтверждённый бизнесом. До 100 баллов за отклик, без повторного начисления. Рейтинг готовности бизнес-задач — отдельная основная механика.</p></div>
           <form action={switchTeam} className="panel space-y-4 p-5">
             <p className="flex items-center gap-2 text-xs font-bold">
               <Pencil size={14} />

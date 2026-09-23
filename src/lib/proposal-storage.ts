@@ -35,7 +35,7 @@ export async function decideProposal(db: PrismaClient, businessId: string, input
       throw new ProposalDecisionError("Решения доступны только для опубликованных задач и задач в работе.");
     const updated = await tx.proposal.updateMany({
       where: { id: proposal.id, status: data.expectedStatus, task: { businessId } },
-      data: { status: data.status },
+      data: { status: data.status, confirmedByBusiness: false, progressRevision: { increment: 1 } },
     });
     if (updated.count !== 1) throw new ProposalDecisionError("Статус уже изменился. Обновите страницу перед новым решением.");
     if (data.status === "ACCEPTED")
