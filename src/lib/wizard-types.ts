@@ -15,6 +15,8 @@ export type WizardState = {
   manualFields: CardField[];
   questions: Question[];
   baselineScore: number;
+  aiMode: "idle" | "openai" | "fallback";
+  aiReason: string;
 };
 export type WizardOperation =
   | "save"
@@ -37,5 +39,7 @@ export function newWizard(): WizardState {
     manualFields: [],
     questions: [],
     baselineScore: 0,
+    aiMode: "idle",
+    aiReason: "",
   };
 }

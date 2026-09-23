@@ -19,14 +19,18 @@
     "db:setup": "npm run db:generate && npm run db:deploy && npm run db:seed",
     "db:verify": "node scripts/verify-db.ts",
     "db:studio": "prisma studio",
-    "db:rescore": "node scripts/rescore.ts"
+    "db:rescore": "node scripts/rescore.ts",
+    "ai:check": "node scripts/check-ai.ts",
+    "ai:check:offline": "node scripts/check-ai.ts --offline"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",
     "lucide-react": "^0.577.0",
     "next": "16.3.6",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.0",

@@ -30,6 +30,11 @@ export function taskToWizard(
   return {
     ...base,
     id: task.id,
+    aiMode:
+      meta.aiMode === "openai" || meta.aiMode === "fallback"
+        ? meta.aiMode
+        : "idle",
+    aiReason: typeof meta.aiReason === "string" ? meta.aiReason : "",
     revision: task.wizardRevision,
     rawDescription: task.rawDescription,
     card,

@@ -1,4 +1,4 @@
-// Provider boundary: a future API adapter implements TaskAssistant.
+// Deterministic fallback and shared card types. Live AI service: ./ai/server.ts.
 // The fallback extracts literal user evidence; it never invents business facts.
 export const cardFields = [
   ["title", "Название", 150],
@@ -140,7 +140,7 @@ const mainQuestions: [CardField, string][] = [
   ],
   [
     "dataMaterials",
-    "Какие данные или материалы уже есть и что вы сможете передать команде?",
+    "Какие обезличенные данные или материалы уже есть? Опишите состав и формат, не присылая сами данные.",
   ],
   [
     "expectedResult",
@@ -156,7 +156,7 @@ const mainQuestions: [CardField, string][] = [
   ],
   [
     "businessContact",
-    "Кто со стороны бизнеса отвечает на вопросы и как команда сможет с ним взаимодействовать?",
+    "Какая роль со стороны бизнеса отвечает на вопросы и какой рабочий формат взаимодействия удобен? Личные контакты не нужны.",
   ],
 ];
 export const extraQuestions: Record<
@@ -173,7 +173,7 @@ export const extraQuestions: Record<
     field: "businessContact",
     label: "Приёмка результата",
     question:
-      "Кто будет принимать итоговый результат и кто сможет дать обратную связь на промежуточную версию?",
+      "Какая роль со стороны бизнеса принимает итоговый результат и даёт обратную связь на промежуточную версию?",
   },
   priority: {
     field: "expectedResult",
@@ -219,7 +219,7 @@ export function buildAnalysis(
       label: cardFields.find(([key]) => key === field)![1],
       question:
         ecommerce && field === "dataMaterials"
-          ? "Есть ли выгрузки заказов, возвратов или статистика воронки интернет-магазина? Что из этого сможете предоставить команде?"
+          ? "Есть ли обезличенные выгрузки заказов, возвратов или статистика воронки интернет-магазина? Опишите состав и формат без персональных данных."
           : question,
       answer: "",
       active: true,

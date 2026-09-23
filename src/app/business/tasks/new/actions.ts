@@ -5,10 +5,11 @@ import { db } from "@/lib/db";
 import { calculateReadiness } from "@/lib/scoring";
 import {
   cardFields,
-  analyzeTask,
+  questionTarget,
   composeCard,
   type CardField,
 } from "@/lib/task-assistant";
+import { analyzeDraft, structureTask } from "@/lib/ai/server";
 import { taskToWizard } from "@/lib/wizard-storage";
 import {
   newWizard,
@@ -114,10 +115,19 @@ export async function persistWizard(
           state.card,
           state.manualFields,
         );
-        const analysis = await analyzeTask(state.rawDescription, composed);
+        const result = await analyzeDraft(state.rawDescription, composed);
+        state.aiMode = result.mode;
+        state.aiReason = result.reason ?? "";
+        const questions = result.data.questions.map((q) => ({
+          ...q,
+          field: questionTarget(q.key)!,
+          label: cardFields.find(([key]) => key === questionTarget(q.key))![1],
+          answer: "",
+          active: true,
+        }));
         state.card = composed;
         state.questions = state.questions.map((q) => ({ ...q, active: false }));
-        for (const question of analysis.questions) {
+        for (const question of questions) {
           const existing = state.questions.find((q) => q.key === question.key);
           if (existing) {
             existing.question = question.question;
@@ -144,12 +154,19 @@ export async function persistWizard(
           "Описание изменилось. Вернитесь к первому шагу и обновите уточняющие вопросы.",
         );
       if (operation === "compose") {
-        state.card = composeCard(
+        const result = await structureTask(
           state.rawDescription,
-          state.questions,
-          state.card,
-          state.manualFields,
+          state.questions.map(({ key, question, answer }) => ({
+            key,
+            question,
+            answer,
+          })),
         );
+        const generated = result.data;
+        for (const key of state.manualFields) generated[key] = state.card[key];
+        state.card = generated;
+        state.aiMode = result.mode;
+        state.aiReason = result.reason ?? "";
         state.step = 3;
         state.maxStep = Math.max(previous.maxStep, 3);
       } else {
@@ -167,6 +184,8 @@ export async function persistWizard(
     validate(state);
     const { score, readinessLevel } = calculateReadiness(state.card);
     const meta = {
+      aiMode: state.aiMode,
+      aiReason: state.aiReason,
       step: state.step,
       maxStep: state.maxStep,
       analyzedDescription: state.analyzedDescription,

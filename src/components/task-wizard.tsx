@@ -32,6 +32,7 @@ export function TaskWizard({
   const [state, setState] = useState(initial);
   const latest = useRef(initial);
   const [busy, setBusy] = useState(false);
+  const [busyOperation, setBusyOperation] = useState<WizardOperation>("save");
   const [saveStatus, setSaveStatus] = useState<
     "saved" | "pending" | "saving" | "error"
   >("saved");
@@ -78,6 +79,7 @@ export function TaskWizard({
   ) {
     if (blocking) {
       setBusy(true);
+      setBusyOperation(operation);
       setError("");
       if (timer.current) clearTimeout(timer.current);
     }
@@ -292,7 +294,19 @@ export function TaskWizard({
         </div>
       )}
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.8fr)_minmax(280px,1fr)]">
-        <section className="panel min-w-0 p-5 sm:p-7">
+        <section className="panel min-w-0 p-5 sm:p-7" aria-busy={busy}>
+          {busy &&
+            (busyOperation === "analyze" || busyOperation === "compose") && (
+              <p
+                role="status"
+                className="mb-5 flex items-center gap-2 rounded-xl bg-violet-50 p-4 text-sm text-violet-700"
+              >
+                <Loader2 size={18} className="animate-spin" />
+                {busyOperation === "analyze"
+                  ? "Анализируем описание задачи..."
+                  : "Собираем карточку из ваших ответов..."}
+              </p>
+            )}
           <fieldset disabled={busy} className="min-w-0">
             {state.step === 1 && (
               <>
@@ -606,9 +620,19 @@ export function TaskWizard({
               после вашей проверки и подтверждения на последнем шаге.
             </p>
           </div>
-          <p className="px-1 text-[11px] leading-relaxed text-slate-400">
-            Работает помощник без внешнего API. Он переносит сообщённые сведения
-            и помогает заметить пробелы, но не проверяет достоверность фактов.
+          <p
+            role="status"
+            className="rounded-xl bg-violet-50 p-4 text-xs leading-relaxed text-violet-800"
+          >
+            {state.aiMode === "openai"
+              ? "Карточку помогает подготовить AI. Проверьте все формулировки: каждое поле можно изменить перед публикацией."
+              : state.aiMode === "fallback"
+                ? state.aiReason === "no_key"
+                  ? "Работает встроенный помощник без API. Все шаги доступны; сведения можно редактировать вручную."
+                  : state.aiReason === "timeout"
+                    ? "AI не ответил вовремя. Продолжаем со встроенным помощником — ваши данные сохранены. Все поля можно редактировать."
+                    : "AI временно недоступен или вернул некорректный ответ. Продолжаем со встроенным помощником. Проверьте и отредактируйте карточку."
+                : "AI поможет уточнить задачу и собрать карточку. Если сервис недоступен, автоматически включится встроенный помощник. Не вводите чувствительные данные."}
           </p>
         </aside>
       </div>
